@@ -331,7 +331,10 @@
                 <span style="font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:500; margin-left:auto; color:{{ e.rColor }};">{{ e.r }}</span>
                 <span onClick="{{ delReflection }}" data-id="{{ e.id }}" style="margin-left:18px; color:#56565d; font-size:17px; line-height:1; cursor:pointer; transition:color .2s;" style-hover="color:#cfcfd4;">×</span>
               </div>
-              <textarea value="{{ e.note }}" data-id="{{ e.id }}" onInput="{{ editReflection }}" onClick="{{ stopProp }}" rows="6" placeholder="write what you saw, what you felt, what you'll repeat…" style="{{ e.noteStyle }}"></textarea>
+              <div style="{{ e.wrapStyle }}">
+                <textarea value="{{ e.note }}" data-id="{{ e.id }}" onInput="{{ editReflection }}" onClick="{{ stopProp }}" rows="5" placeholder="write what you saw, what you felt, what you'll repeat…" style="{{ e.taStyle }}"></textarea>
+                <button onClick="{{ saveEntry }}" data-id="{{ e.id }}" style="margin-top:12px; background:#f1f1f3; color:#0a0a0b; border:none; border-radius:7px; padding:8px 20px; font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; cursor:pointer;">save</button>
+              </div>
             </div>
           </sc-for>
         </div>
@@ -588,6 +591,7 @@ class Component extends DCLogic {
   editReflection(ev){ var id=parseInt(ev.currentTarget.dataset.id,10), v=ev.currentTarget.value; this.setState((s)=>({ reflections:s.reflections.map((e)=> e.id===id?Object.assign({},e,{note:v}):e) }), ()=>this.persist()); }
   delReflection(ev){ ev.stopPropagation(); var id=parseInt(ev.currentTarget.dataset.id,10); this.setState((s)=>({ reflections:s.reflections.filter((e)=>e.id!==id) }), ()=>this.persist()); }
   stopProp(ev){ ev.stopPropagation(); }
+  saveEntry(ev){ ev.stopPropagation(); this.setState({ openId:null }, ()=>this.persist()); }
   commitPair(ev){ var v=(ev.currentTarget.value||'').trim().toUpperCase(); if(!v) return; if((this.state.pairs||[]).indexOf(v)>-1) return; this.setState((s)=>({ pairs:(s.pairs||[]).concat([v]) }), ()=>this.persist()); }
 
   // sheets
@@ -731,14 +735,15 @@ class Component extends DCLogic {
     for(var cd=1;cd<=daysInMonth;cd++){ var info=dayMap[cd], has=!!info; calCells.push({ day:String(cd), dayColor: has?'#cfcfd4':'#56565d', hasPnl:has, pnl: has?money(info.pnl):'', pnlColor: has?(info.pnl>=0?'#e8e8ea':'#9a9aa1'):'#8b8b92', hasNote: has&&info.notes.length>0, note: has&&info.notes.length?info.notes[0]:'', cellStyle:{ minHeight:'58px', padding:'7px 6px', borderTop:'1px solid rgba(255,255,255,.1)', background: (has?(info.pnl>=1?'rgba(255,255,255,.15)':(info.pnl<0?'rgba(130,130,140,.14)':'transparent')):'transparent') } }); }
     var calMonthLabel=first.toLocaleString('en-US',{month:'long',year:'numeric'}).toLowerCase();
     // ---- journal entries ----
-    var nb = { overflow:'hidden', display:'block', width:'100%', boxSizing:'border-box', resize:'none', outline:'none', borderTop:'none', borderRight:'none', borderBottom:'none', borderLeft:'2px solid rgba(255,255,255,.18)', background:'rgba(255,255,255,.02)', fontFamily:"'Space Grotesk',sans-serif", fontWeight:300, fontSize:'14px', lineHeight:1.7, color:'#9a9aa1', paddingLeft:'20px', paddingRight:'20px', transition:'max-height .5s cubic-bezier(.2,.7,.2,1), opacity .4s ease, margin-top .4s ease, padding .4s ease' };
-    var entries=this.state.reflections.map(function(e){ var o=self.state.openId===e.id; return { id:e.id, date:e.date, sym:e.sym, dir:e.dir, r:e.r, note:e.note, rColor: (e.r&&e.r.indexOf('-')===0)?'#9a9aa1':'#e8e8ea', noteStyle: o?Object.assign({},nb,{ maxHeight:'240px', opacity:'1', marginTop:'15px', paddingTop:'16px', paddingBottom:'16px' }):Object.assign({},nb,{ maxHeight:'0px', opacity:'0', marginTop:'0px', paddingTop:'0px', paddingBottom:'0px' }) }; });
+    var wrapBase = { overflow:'hidden', borderLeft:'2px solid rgba(255,255,255,.18)', background:'rgba(255,255,255,.02)', transition:'max-height .5s cubic-bezier(.2,.7,.2,1), opacity .4s ease, margin-top .4s ease, padding .4s ease' };
+    var taBase = { width:'100%', boxSizing:'border-box', background:'transparent', border:'none', outline:'none', resize:'none', fontFamily:"'Space Grotesk',sans-serif", fontWeight:300, fontSize:'14px', lineHeight:1.7, color:'#cfcfd4', minHeight:'96px' };
+    var entries=this.state.reflections.map(function(e){ var o=self.state.openId===e.id; return { id:e.id, date:e.date, sym:e.sym, dir:e.dir, r:e.r, note:e.note, rColor: (e.r&&e.r.indexOf('-')===0)?'#9a9aa1':'#e8e8ea', taStyle: taBase, wrapStyle: o?Object.assign({},wrapBase,{ maxHeight:'340px', opacity:'1', marginTop:'15px', paddingTop:'16px', paddingBottom:'16px', paddingLeft:'20px', paddingRight:'20px' }):Object.assign({},wrapBase,{ maxHeight:'0px', opacity:'0', marginTop:'0px', paddingTop:'0px', paddingBottom:'0px', paddingLeft:'20px', paddingRight:'20px' }) }; });
 
     // ---- data sheet ----
     var sheet=this.activeSheetObj();
     var d=this.derive(sheet.trades, risk);
     var shRowsView=d.rows.map(function(t){ var r=parseFloat(t.result); var hasR=!isNaN(r)&&t.result!==''; var hb=hasR?Math.min(100,Math.abs(r)/3*100):0; return Object.assign({},t,{ rColor: !hasR?'#6f6f77':(r>0?'#e8e8ea':(r<0?'#9a9aa1':'#8b8b92')), sideStyle:self.sideStyle(t.dir||'long'), sessAbbr:sessAbbr(t.session), sessStyle:self.sessionStyle(), barStyle:{ height:'6px', width:hb+'%', borderRadius:'3px', background:(r>=0?'#dcdce0':'#7c7c84') }, photoCount:(t.photos||[]).filter(Boolean).length }); });
-    var monthly=this.group(sheet.trades, function(t){ var p=(t.date||'').split('/'); var mn=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']; var mi=parseInt(p[0],10); return (mi>=1&&mi<=12)?mn[mi-1]:'—'; });
+    var monthly=this.group(sheet.trades, function(t){ var p=(t.date||'').split('/'); var mn=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']; var mi=parseInt(p[0],10); var yr=new Date().getFullYear(); return (mi>=1&&mi<=12)?(mn[mi-1]+' '+yr):'—'; });
     var pairs=this.group(sheet.trades, function(t){ return (t.pair||'').trim().toUpperCase(); });
     var sheetsNav=this.state.sheets.map(function(sh){ var on=view==='data'&&sh.id===self.state.activeSheet; var ed=self.state.editingSheet===sh.id; return { id:sh.id, name:sh.name||'untitled', bar:on?1:0, color:on?'#f1f1f3':'#8b8b92', editing:ed, notEditing:!ed }; });
 
@@ -778,7 +783,7 @@ class Component extends DCLogic {
       pairOptions: (this.state.pairs||[]).map(function(p){ return { v:p }; }), commitPair:(e)=>this.commitPair(e),
       calCells:calCells, weekdays:['M','T','W','T','F','S','S'], calMonthLabel:calMonthLabel, prevMonth:()=>this.prevMonth(), nextMonth:()=>this.nextMonth(),
 
-      entries:entries, toggleEntry:(e)=>this.toggleEntry(e), addReflection:()=>this.addReflection(), editReflection:(e)=>this.editReflection(e), delReflection:(e)=>this.delReflection(e), stopProp:(e)=>this.stopProp(e),
+      entries:entries, toggleEntry:(e)=>this.toggleEntry(e), addReflection:()=>this.addReflection(), editReflection:(e)=>this.editReflection(e), delReflection:(e)=>this.delReflection(e), stopProp:(e)=>this.stopProp(e), saveEntry:(e)=>this.saveEntry(e),
 
       shTotalR:d.totalR, shWins:d.wins, shLosses:d.losses, shBe:d.be, shWinRate:d.winRate, shMaxDD:d.maxDD,
       shRows:shRowsView, shHasRows:d.rows.length>0, shEmpty:d.rows.length===0, sheetName:sheet.name, editSheetTitle:(e)=>this.editSheetTitle(e),
