@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Shippori+Mincho+B1:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { background:#15151a; }
+  html, body { background:#15151a; overflow-x:hidden; }
   input { font-family:inherit; font-size:inherit; color:inherit; background:transparent; border:none; }
   input:focus { outline:none; }
   input::placeholder { color:#48484e; }
@@ -36,9 +36,13 @@
   @keyframes noirRise { from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
   @keyframes noirInk { from{opacity:0;} to{opacity:1;} }
   @keyframes noirView { from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes sakuGlow { 0%,100%{ box-shadow:0 0 16px -6px rgba(255,255,255,.5); } 50%{ box-shadow:0 0 32px -2px rgba(255,255,255,.85); } }
+  @keyframes sakuSheen { 0%{ left:-65%; } 55%,100%{ left:130%; } }
+  @keyframes sakuBoot { from{opacity:0; transform:translateY(10px) scale(.995);} to{opacity:1; transform:translateY(0) scale(1);} }
+  @keyframes sakuRise { from{opacity:0; transform:translateY(26px) scale(.985);} to{opacity:1; transform:translateY(0) scale(1);} }
 </style>
 </helmet>
-<div style="position:relative; min-height:100vh; background:radial-gradient(125% 55% at 50% -12%, rgba(255,255,255,.1), transparent 50%), radial-gradient(100% 90% at 50% 125%, rgba(0,0,0,.4), transparent 58%), #15151a; color:#f1f1f3; font-family:'Space Grotesk',sans-serif; display:flex; flex-direction:{{ rootDir }}; overflow:{{ rootOver }};">
+<div style="position:relative; min-height:100vh; background:radial-gradient(125% 55% at 50% -12%, rgba(255,255,255,.1), transparent 50%), radial-gradient(100% 90% at 50% 125%, rgba(0,0,0,.4), transparent 58%), #15151a; color:#f1f1f3; font-family:'Space Grotesk',sans-serif; animation:sakuBoot .7s cubic-bezier(.2,.7,.2,1) both; display:flex; flex-direction:{{ rootDir }}; overflow:{{ rootOver }};">
 
   <datalist id="sakuPairs"><sc-for list="{{ pairOptions }}" as="po" hint-placeholder-count="9"><option value="{{ po.v }}"></option></sc-for></datalist>
 
@@ -51,17 +55,18 @@
     <div onClick="{{ goLogin }}" style="display:flex; align-items:baseline; gap:11px; cursor:pointer; padding:0 6px;">
       <span style="font-family:'Shippori Mincho B1',serif; font-size:22px; font-weight:600;">朔</span>
       <span style="font-size:15px; font-weight:600; letter-spacing:.02em;">saku</span>
-      <span style="font-size:11px; font-weight:300; color:#6a6a72;">desk</span>
     </div>
 
     <nav style="{{ navStyle }}">
-      <div onClick="{{ goOverview }}" style="position:relative; padding:11px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
+      <div onClick="{{ goOverview }}" onDblClick="{{ startNavEdit }}" data-nav="overview" style="position:relative; padding:11px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
         <span style="position:absolute; left:0; top:12px; bottom:12px; width:2px; border-radius:2px; background:#f1f1f3; transform:scaleY({{ ovBar }}); transition:transform .4s cubic-bezier(.2,.7,.2,1);"></span>
-        <span style="font-size:13.5px; color:{{ ovColor }}; transition:color .3s;">overview</span>
+        <sc-if value="{{ ovEditing }}" hint-placeholder-val="{{ false }}"><input value="{{ ovLabel }}" data-nav="overview" onInput="{{ renameNav }}" onBlur="{{ stopNavEdit }}" onKeyDown="{{ keyNav }}" autofocus style="width:100%; color:#f1f1f3; font-size:13.5px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.3); outline:none; padding-bottom:2px;"></sc-if>
+        <sc-if value="{{ ovNotEditing }}" hint-placeholder-val="{{ true }}"><span style="font-size:13.5px; color:{{ ovColor }}; transition:color .3s;">{{ ovLabel }}</span></sc-if>
       </div>
-      <div onClick="{{ goJournal }}" style="position:relative; padding:11px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
+      <div onClick="{{ goJournal }}" onDblClick="{{ startNavEdit }}" data-nav="journal" style="position:relative; padding:11px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
         <span style="position:absolute; left:0; top:12px; bottom:12px; width:2px; border-radius:2px; background:#f1f1f3; transform:scaleY({{ jnBar }}); transition:transform .4s cubic-bezier(.2,.7,.2,1);"></span>
-        <span style="font-size:13.5px; color:{{ jnColor }}; transition:color .3s;">journal</span>
+        <sc-if value="{{ jnEditing }}" hint-placeholder-val="{{ false }}"><input value="{{ jnLabel }}" data-nav="journal" onInput="{{ renameNav }}" onBlur="{{ stopNavEdit }}" onKeyDown="{{ keyNav }}" autofocus style="width:100%; color:#f1f1f3; font-size:13.5px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.3); outline:none; padding-bottom:2px;"></sc-if>
+        <sc-if value="{{ jnNotEditing }}" hint-placeholder-val="{{ true }}"><span style="font-size:13.5px; color:{{ jnColor }}; transition:color .3s;">{{ jnLabel }}</span></sc-if>
       </div>
     </nav>
 
@@ -110,7 +115,7 @@
 
           <div style="display:grid; grid-template-columns:{{ kpiCols }}; gap:16px;">
             <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
-              <div style="position:relative; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:18px 20px; overflow:hidden;">
+              <div style="position:relative; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:18px 20px; overflow:hidden; animation:sakuRise .6s cubic-bezier(.2,.7,.2,1) {{ k.delay }} both;">
                 <div style="position:absolute; left:0; top:0; bottom:0; width:2px; background:{{ k.bar }};"></div>
                 <div style="display:flex; align-items:center; justify-content:space-between;">
                   <span style="font-size:11px; letter-spacing:.13em; color:#7c7c84;">{{ k.label }}</span>
@@ -122,7 +127,7 @@
             </sc-for>
           </div>
 
-          <div style="display:grid; grid-template-columns:{{ ovCols }}; gap:16px; align-items:stretch;">
+          <div style="display:grid; grid-template-columns:{{ ovCols }}; gap:16px; align-items:stretch; animation:sakuRise .7s cubic-bezier(.2,.7,.2,1) .34s both;">
           <div style="display:flex; flex-direction:column; gap:16px; min-width:0;">
           <!-- equity chart -->
           <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:22px 24px;">
@@ -287,7 +292,7 @@
           </div>
           </div>
 
-          <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:22px 24px;">
+          <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:22px 24px; animation:sakuRise .7s cubic-bezier(.2,.7,.2,1) .5s both;">
             <div style="font-size:14px; font-weight:500;">performance by pair</div>
             <div style="font-size:12px; font-weight:300; color:#6a6a72; margin-top:3px;">total r per instrument · best to worst</div>
             <sc-if value="{{ pairPerfHas }}" hint-placeholder-val="{{ false }}">
@@ -357,9 +362,8 @@
             <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:18px 20px;"><div style="font-size:10px; letter-spacing:.14em; color:#6f6f77;">max drawdown</div><div style="font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:500; margin-top:11px; color:#9a9aa1;">{{ shMaxDD }}</div></div>
           </div>
 
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <button onClick="{{ addRow }}" style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.18); border-radius:9px; color:#f1f1f3; padding:11px 20px; font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; transition:background .3s, border-color .3s;" style-hover="background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.4);"><span style="font-size:15px;">+</span>add trade</button>
-            <span style="font-style:italic; font-size:12.5px; color:#56565d;">cumulative r &amp; drawdown auto-calculate</span>
+          <div style="display:flex; align-items:center; justify-content:flex-start;">
+            <button onClick="{{ addRow }}" style="position:relative; overflow:hidden; display:inline-flex; align-items:center; gap:11px; background:linear-gradient(100deg,#ffffff,#d7d7dc); color:#0a0a0b; border:none; border-radius:11px; padding:13px 34px; font-size:11px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; cursor:pointer; animation:sakuGlow 2.6s ease-in-out infinite; transition:transform .25s cubic-bezier(.2,.7,.2,1);" style-hover="transform:translateY(-1px) scale(1.015);"><span style="position:absolute; top:0; left:-65%; width:55%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent); animation:sakuSheen 3s ease-in-out infinite; pointer-events:none;"></span><span style="position:relative; z-index:1; font-size:16px; line-height:1; font-weight:600;">+</span><span style="position:relative; z-index:1;">add trade</span></button>
           </div>
 
           <div style="border:1px solid rgba(255,255,255,.1); border-radius:13px; overflow:hidden;">
@@ -542,14 +546,14 @@ class Component extends DCLogic {
   }
 
   loadState() {
-    var trades = [], seq = 1, sheets = [{ id:1, name:'', trades:[] }], activeSheet = 1, sheetSeq = 2, pairs = this.defaultPairs(), reflections = [];
+    var trades = [], seq = 1, sheets = [{ id:1, name:'', trades:[] }], activeSheet = 1, sheetSeq = 2, pairs = this.defaultPairs(), reflections = [], navLabels = { overview:'overview', journal:'journal' };
     try {
       var raw = localStorage.getItem('sakuNoirV4');
-      if (raw) { var o = JSON.parse(raw); if (o.trades) trades = o.trades; if (o.seq) seq = o.seq; if (o.sheets) sheets = o.sheets; if (o.activeSheet) activeSheet = o.activeSheet; if (o.sheetSeq) sheetSeq = o.sheetSeq; if (o.pairs) pairs = o.pairs; if (o.reflections) reflections = o.reflections; }
+      if (raw) { var o = JSON.parse(raw); if (o.trades) trades = o.trades; if (o.seq) seq = o.seq; if (o.sheets) sheets = o.sheets; if (o.activeSheet) activeSheet = o.activeSheet; if (o.sheetSeq) sheetSeq = o.sheetSeq; if (o.pairs) pairs = o.pairs; if (o.reflections) reflections = o.reflections; if (o.navLabels) navLabels = o.navLabels; }
     } catch (e) {}
-    return { view:'overview', trades:trades, positions:[], seq:seq, sheets:sheets, activeSheet:activeSheet, sheetSeq:sheetSeq, pairs:pairs, editingSheet:null, openId:null, range:'90', hover:null, clock:this.fmtClock(), reflections:reflections, vw:(typeof window!=='undefined'?window.innerWidth:1200), calMonth:{ y:new Date().getFullYear(), m:new Date().getMonth() }, lightbox:null };
+    return { view:'overview', trades:trades, positions:[], seq:seq, sheets:sheets, activeSheet:activeSheet, sheetSeq:sheetSeq, pairs:pairs, navLabels:navLabels, editingNav:null, editingSheet:null, openId:null, range:'90', hover:null, clock:this.fmtClock(), reflections:reflections, vw:(typeof window!=='undefined'?window.innerWidth:1200), calMonth:{ y:new Date().getFullYear(), m:new Date().getMonth() }, lightbox:null };
   }
-  persist() { var payload={ trades:this.state.trades, seq:this.state.seq, sheets:this.state.sheets, activeSheet:this.state.activeSheet, sheetSeq:this.state.sheetSeq, pairs:this.state.pairs, reflections:this.state.reflections }; try { localStorage.setItem('sakuNoirV4', JSON.stringify(payload)); } catch (e) {} try { var sb=window.sakuSB; if(sb && this.userId){ sb.from('journals').upsert({ user_id:this.userId, data:payload, updated_at:new Date().toISOString() }).then(function(){},function(){}); } } catch(e){} }
+  persist() { var payload={ trades:this.state.trades, seq:this.state.seq, sheets:this.state.sheets, activeSheet:this.state.activeSheet, sheetSeq:this.state.sheetSeq, pairs:this.state.pairs, reflections:this.state.reflections, navLabels:this.state.navLabels }; try { localStorage.setItem('sakuNoirV4', JSON.stringify(payload)); } catch (e) {} try { var sb=window.sakuSB; if(sb && this.userId){ sb.from('journals').upsert({ user_id:this.userId, data:payload, updated_at:new Date().toISOString() }).then(function(){},function(){}); } } catch(e){} }
 
   fmtClock() { var d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
   today() { var d=new Date(); return String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0'); }
@@ -568,13 +572,17 @@ class Component extends DCLogic {
     }, 1300);
   }
   componentWillUnmount() { if (this._int) clearInterval(this._int); if (this._clk) clearInterval(this._clk); if (this._esc) document.removeEventListener('keydown', this._esc); if (this._rsz) window.removeEventListener('resize', this._rsz); }
-  initSupabase(){ var self=this, sb=window.sakuSB; if(!sb) return; sb.auth.getSession().then(function(res){ var session=res && res.data && res.data.session; if(!session){ window.location.href='index.html'; return; } self.userId=session.user.id; sb.from('journals').select('data').eq('user_id', self.userId).maybeSingle().then(function(r){ try{ if(r && r.data && r.data.data){ self.setState(r.data.data); } }catch(e){} }); }); }
+  initSupabase(){ var self=this, sb=window.sakuSB; if(!sb) return; sb.auth.getSession().then(function(res){ var session=res && res.data && res.data.session; if(!session){ window.location.href='index.html'; return; } self.userId=session.user.id; sb.from('journals').select('data').eq('user_id', self.userId).maybeSingle().then(function(r){ try{ var cloud=(r&&r.data&&r.data.data)?r.data.data:null; var cc=0; if(cloud&&cloud.sheets){ cloud.sheets.forEach(function(sh){ cc+=(sh.trades?sh.trades.length:0); }); } if(cloud&&cloud.reflections){ cc+=cloud.reflections.length; } var lc=0; (self.state.sheets||[]).forEach(function(sh){ lc+=(sh.trades?sh.trades.length:0); }); lc+=(self.state.reflections||[]).length; if(cc>0){ self.setState(cloud); } else if(lc>0){ self.persist(); } }catch(e){} }); }); }
   signOut(){ var sb=window.sakuSB; if(sb){ sb.auth.signOut().then(function(){ window.location.href='index.html'; }); } else { window.location.href='index.html'; } }
 
   go(href){ window.location.href=href; }
   setView(v){ this.setState({ view:v, hover:null }); }
   setRange(r){ this.setState({ range:r, hover:null }); }
   prevMonth(){ this.setState((s)=>{ var m=s.calMonth.m-1, y=s.calMonth.y; if(m<0){m=11;y--;} return { calMonth:{y:y,m:m} }; }); }
+  startNavEdit(ev){ var k=ev.currentTarget.dataset.nav; this.setState({ editingNav:k }); }
+  renameNav(ev){ var k=ev.currentTarget.dataset.nav, v=ev.currentTarget.value; this.setState((s)=>{ var nl=Object.assign({},s.navLabels); nl[k]=v; return { navLabels:nl }; }, ()=>this.persist()); }
+  stopNavEdit(){ this.setState({ editingNav:null }, ()=>this.persist()); }
+  keyNav(ev){ if(ev.key==='Enter') ev.currentTarget.blur(); }
   nextMonth(){ this.setState((s)=>{ var m=s.calMonth.m+1, y=s.calMonth.y; if(m>11){m=0;y++;} return { calMonth:{y:y,m:m} }; }); }
 
   nextSession(s){ var o=['asia','london','ny']; var i=o.indexOf(s); return o[(i+1)%3]||'asia'; }
@@ -727,6 +735,7 @@ class Component extends DCLogic {
       { label:'profit factor', value:pf.toFixed(2), valColor:'#f1f1f3', bar:'rgba(255,255,255,.45)', delta:(pf>=1?'↗ strong':'↘ weak'), deltaColor:'#9a9aa1', caption:'expectancy '+(expectancy>=0?'+':'')+expectancy.toFixed(2)+'r / trade' },
       { label:'max drawdown', value:money(maxDD), valColor:'#9a9aa1', bar:'rgba(255,255,255,.45)', delta:(maxDD<0?'▽ dip':'— flat'), deltaColor:'#8b8b92', caption:'largest peak-to-trough' }
     ];
+    kpis.forEach(function(k,i){ k.delay=(i*0.12).toFixed(2)+'s'; });
 
     // ---- pnl calendar ----
     var cm=this.state.calMonth, first=new Date(cm.y,cm.m,1);
@@ -754,8 +763,8 @@ class Component extends DCLogic {
     var lbTrade = lbOpen ? (sheet.trades[lbRow]||{}) : {};
     var lbPhotos=[0,1,2].map(function(i){ return { idx:i, url:(lbTrade.photos||[])[i]||'' }; });
     var lbImages=((lbTrade.photos)||[]).filter(Boolean).map(function(u){ return { url:u }; });
-    var titles={ overview:'overview', journal:'journal', data:'' };
-    var subs={ overview:'the standing — ninety days in the dark', journal:'reflections, newest first', data:'' };
+    var titles={ overview:((this.state.navLabels&&this.state.navLabels.overview)||'overview'), journal:((this.state.navLabels&&this.state.navLabels.journal)||'journal'), data:'' };
+    var subs={ overview:'discipline over outcome', journal:'reflections, newest first', data:'' };
 
     return {
       grainRef: (el) => { if (el) el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"; },
@@ -770,6 +779,9 @@ class Component extends DCLogic {
       ovBar: view==='overview'?1:0, jnBar: view==='journal'?1:0,
       goOverview: () => this.setView('overview'), goJournal: () => this.setView('journal'),
       viewTitle: titles[view], viewSub: subs[view],
+      ovLabel:((this.state.navLabels&&this.state.navLabels.overview)||'overview'), jnLabel:((this.state.navLabels&&this.state.navLabels.journal)||'journal'),
+      ovEditing:this.state.editingNav==='overview', ovNotEditing:this.state.editingNav!=='overview', jnEditing:this.state.editingNav==='journal', jnNotEditing:this.state.editingNav!=='journal',
+      startNavEdit:(e)=>this.startNavEdit(e), renameNav:(e)=>this.renameNav(e), stopNavEdit:()=>this.stopNavEdit(), keyNav:(e)=>this.keyNav(e),
 
       sheetsNav: sheetsNav,
       goSheet:(e)=>this.goSheet(e), addSheet:()=>this.addSheet(), startEdit:(e)=>this.startEdit(e), renameSheet:(e)=>this.renameSheet(e), stopEdit:()=>this.stopEdit(), keyEdit:(e)=>this.keyEdit(e), deleteSheet:(e)=>this.deleteSheet(e),

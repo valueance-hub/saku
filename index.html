@@ -71,12 +71,13 @@
 </script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { height:100%; background:#050506; }
+  html, body { height:100%; background:#050506; overflow-x:hidden; }
   @keyframes sakuFadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
   @keyframes sakuFadeIn { from { opacity:0; } to { opacity:1; } }
   @keyframes sakuHaze { 0%,100% { opacity:.16; } 50% { opacity:.46; } }
   @keyframes sakuRule { from { transform:scaleX(0); } to { transform:scaleX(1); } }
   @keyframes sakuVeil { 0% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
+  @keyframes sakuSweep { 0% { transform:translateX(-60vw) skewX(-18deg); opacity:0; } 18% { opacity:1; } 100% { transform:translateX(130vw) skewX(-18deg); opacity:0; } }
   @keyframes sakuBlade { 0% { opacity:0; transform:scaleX(.15); } 22% { opacity:1; } 60% { opacity:1; transform:scaleX(1); } 100% { opacity:0; transform:scaleX(1); } }
 </style>
 </helmet>
@@ -90,6 +91,9 @@
   <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(5,5,6,.55) 0%, transparent 22%, transparent 72%, rgba(5,5,6,.62) 100%); pointer-events:none;"></div>
 
   <!-- particle field (filled by logic) -->
+  <div style="position:absolute; inset:0; z-index:30; pointer-events:none; overflow:hidden;">
+    <div style="position:absolute; top:-10%; left:0; width:30%; height:120%; background:linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent); animation:sakuSweep 1.8s cubic-bezier(.2,.7,.2,1) .5s both;"></div>
+  </div>
   <div ref="{{ particleHost }}" style="position:absolute; inset:0; overflow:hidden; pointer-events:none;"></div>
 
   <!-- top hairline label -->
@@ -123,9 +127,30 @@
           <span style="position:relative; z-index:1; display:flex; align-items:center; justify-content:center; gap:14px; padding:18px; color:#ffffff; font-family:'Satoshi'; font-weight:600; font-size:12px; letter-spacing:.34em; text-transform:uppercase; transition:color .4s ease, letter-spacing .55s cubic-bezier(.2,.7,.2,1);">Enter the dojo<span style="display:inline-block; transition:transform .5s cubic-bezier(.2,.7,.2,1);">→</span></span>
         </button>
 
-        <button onClick="{{ createAccount }}" style="display:block; width:100%; margin-top:16px; padding:6px 0; background:none; border:none; color:rgba(255,255,255,.5); font-family:'Satoshi'; font-weight:400; font-size:11px; letter-spacing:.24em; text-transform:uppercase; cursor:pointer; transition:color .45s cubic-bezier(.2,.7,.2,1);" style-hover="color:#ffffff;">Create account</button>
+        <button onClick="{{ openSignup }}" style="display:block; width:100%; margin-top:16px; padding:6px 0; background:none; border:none; color:rgba(255,255,255,.5); font-family:'Satoshi'; font-weight:400; font-size:11px; letter-spacing:.24em; text-transform:uppercase; cursor:pointer; transition:color .45s cubic-bezier(.2,.7,.2,1);" style-hover="color:#ffffff;">Create account</button>
         <div style="{{ errStyle }}">{{ err }}</div>
       </div>
+    </div>
+  </div>
+
+  <!-- create-account panel -->
+  <div style="{{ suBackdrop }}" onClick="{{ closeSignup }}">
+    <div style="{{ suPanel }}" onClick="{{ stopSu }}">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+        <div style="font-family:'Satoshi',sans-serif; font-size:19px; font-weight:700; color:#ffffff; letter-spacing:.01em;">Create your account</div>
+        <button onClick="{{ closeSignup }}" style="background:none; border:none; color:rgba(255,255,255,.5); font-size:24px; line-height:1; cursor:pointer;">&times;</button>
+      </div>
+      <div style="position:relative;">
+        <label style="display:block; font-family:'Satoshi'; font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:rgba(255,255,255,.6);">Email</label>
+        <input value="{{ su_email }}" onInput="{{ setSuEmail }}" style="width:100%; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.22); color:#ffffff; font-family:'Satoshi'; font-size:16px; padding:11px 0; outline:none; margin-top:6px;">
+      </div>
+      <div style="position:relative; margin-top:26px;">
+        <label style="display:block; font-family:'Satoshi'; font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:rgba(255,255,255,.6);">Passcode</label>
+        <input type="password" value="{{ su_pass }}" onInput="{{ setSuPass }}" style="width:100%; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.22); color:#ffffff; font-family:'Satoshi'; font-size:16px; padding:11px 0; outline:none; letter-spacing:.2em; margin-top:6px;">
+        <div style="font-size:11px; color:rgba(255,255,255,.38); margin-top:9px;">at least 6 characters</div>
+      </div>
+      <button onClick="{{ doSignup }}" style="position:relative; overflow:hidden; width:100%; margin-top:30px; background:#f4efe6; border:none; cursor:pointer; padding:17px; color:#0a0a0b; font-family:'Satoshi'; font-weight:700; font-size:12px; letter-spacing:.3em; text-transform:uppercase; border-radius:3px;">Create account</button>
+      <div style="{{ suErrStyle }}">{{ su_err }}</div>
     </div>
   </div>
 
@@ -139,7 +164,7 @@
   &quot;monochrome&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot; }
 }">
 class Component extends DCLogic {
-  state = { email: '', pass: '', focused: null, err: '' };
+  state = { email: '', pass: '', focused: null, err: '', signupOpen: false, su_email: '', su_pass: '', su_err: '' };
 
   fieldStyle(active) {
     const base = {
@@ -185,14 +210,21 @@ class Component extends DCLogic {
   enterDojo(e) {
     this.ripple(e);
     var self=this, sb=window.sakuSB;
-    if(!sb){ setTimeout(function () { window.location.href = 'dashboard.html'; }, 540); return; }
+    if(!sb){ setTimeout(function () { self.goWithVeil('dashboard.html'); }, 200); return; }
     if(!self.state.email || !self.state.pass){ self.setState({ err:'enter your email and passcode' }); return; }
     self.setState({ err:'' });
     sb.auth.signInWithPassword({ email:self.state.email, password:self.state.pass }).then(function(res){
       if(res.error){ self.setState({ err:res.error.message }); }
-      else { window.location.href = 'dashboard.html'; }
+      else { self.goWithVeil('dashboard.html'); }
     });
   }
+  goWithVeil(href){ try{ var v=document.createElement('div'); v.style.cssText='position:fixed;inset:0;z-index:9999;background:#050506;opacity:0;transition:opacity .55s cubic-bezier(.2,.7,.2,1);pointer-events:none;'; document.body.appendChild(v); requestAnimationFrame(function(){ v.style.opacity='1'; }); setTimeout(function(){ window.location.href=href; }, 560); }catch(e){ window.location.href=href; } }
+  openSignup(e){ if(e&&e.preventDefault) e.preventDefault(); this.setState({ signupOpen:true, su_err:'', su_email:this.state.email||'', su_pass:'' }); }
+  closeSignup(){ this.setState({ signupOpen:false }); }
+  stopSu(e){ e.stopPropagation(); }
+  setSuEmail(e){ this.setState({ su_email:e.target.value }); }
+  setSuPass(e){ this.setState({ su_pass:e.target.value }); }
+  doSignup(e){ if(e&&e.preventDefault) e.preventDefault(); var self=this, sb=window.sakuSB; if(!sb){ self.setState({ su_err:'connect supabase first (see setup guide)' }); return; } if(!self.state.su_email||!self.state.su_pass){ self.setState({ su_err:'enter an email and a passcode (min 6 chars)' }); return; } self.setState({ su_err:'' }); sb.auth.signUp({ email:self.state.su_email, password:self.state.su_pass }).then(function(res){ if(res.error){ self.setState({ su_err:res.error.message }); } else { var sess=res.data&&res.data.session; if(sess){ self.goWithVeil('dashboard.html'); } else { self.setState({ su_err:'account created — check your email to confirm, or just sign in.' }); } } }); }
   createAccount(e) {
     if(e&&e.preventDefault) e.preventDefault();
     var self=this, sb=window.sakuSB;
@@ -335,6 +367,11 @@ class Component extends DCLogic {
       btnLeave: (e) => this.btnLeave(e),
       enterDojo: (e) => this.enterDojo(e),
       createAccount: (e) => this.createAccount(e),
+      openSignup:(e)=>this.openSignup(e), closeSignup:()=>this.closeSignup(), stopSu:(e)=>this.stopSu(e), setSuEmail:(e)=>this.setSuEmail(e), setSuPass:(e)=>this.setSuPass(e), doSignup:(e)=>this.doSignup(e),
+      su_email:this.state.su_email, su_pass:this.state.su_pass, su_err:this.state.su_err,
+      suErrStyle: this.state.su_err ? { marginTop:'16px', fontSize:'12px', color:'#e6a3a3', letterSpacing:'.02em', fontFamily:"'Satoshi'" } : { display:'none' },
+      suBackdrop: { position:'fixed', inset:'0', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px', background:'rgba(5,5,6,.82)', backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)', opacity:this.state.signupOpen?1:0, pointerEvents:this.state.signupOpen?'auto':'none', transition:'opacity .45s ease' },
+      suPanel: { width:'min(420px,100%)', background:'#0c0c0f', border:'1px solid rgba(255,255,255,.1)', borderRadius:'18px', padding:'30px 30px 32px', boxShadow:'0 40px 110px -30px rgba(0,0,0,.9)', transform:this.state.signupOpen?'translateY(0px)':'translateY(34px)', opacity:this.state.signupOpen?1:0, transition:'transform .55s cubic-bezier(.2,.7,.2,1), opacity .45s ease' },
       err: this.state.err,
       errStyle: this.state.err ? { marginTop:'16px', fontSize:'12px', color:'#e6a3a3', letterSpacing:'.02em', fontFamily:"'Satoshi'" } : { display:'none' },
       particleHost: (el) => { this.host = el; if (el) this.spawnParticles(); },
