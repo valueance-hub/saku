@@ -129,7 +129,7 @@
             <div style="display:flex; align-items:flex-start; justify-content:space-between;">
               <div>
                 <div style="font-size:14px; font-weight:500;">equity curve</div>
-                <div style="font-size:12px; font-weight:300; color:#6a6a72; margin-top:3px;">cumulative p&amp;l · {{ rangeLabel }} · max dd {{ maxDD }}</div>
+                <div style="font-size:12px; font-weight:300; color:#6a6a72; margin-top:3px;">cumulative r · {{ rangeLabel }} · max dd {{ maxDD }}</div>
               </div>
               <div style="display:flex; gap:4px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.1); border-radius:9px; padding:3px;">
                 <sc-for list="{{ ranges }}" as="r" hint-placeholder-count="3">
@@ -188,7 +188,7 @@
               <button onClick="{{ addTrade }}" style="display:inline-flex; align-items:center; gap:7px; background:#f1f1f3; color:#070708; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:600; cursor:pointer; transition:opacity .2s;" style-hover="opacity:.82;"><span style="font-size:14px; line-height:1;">+</span> add trade</button>
             </div>
             <div style="display:flex; margin-top:18px; padding:0 6px 9px; border-bottom:1px solid rgba(255,255,255,.1); font-size:10px; letter-spacing:.1em; color:#6f6f77;">
-              <span style="flex:0 0 22px;"></span><span style="flex:0 0 62px;">date</span><span style="flex:0 0 80px;">pair</span><span style="flex:0 0 66px;">side</span><span style="flex:0 0 56px;">sess</span><span style="flex:0 0 56px; text-align:right;">r</span><span style="flex:0 0 84px; text-align:right;">p&amp;l</span><span style="flex:1; padding-left:16px;">note</span><span style="flex:0 0 28px;"></span>
+              <span style="flex:0 0 22px;"></span><span style="flex:0 0 62px;">date</span><span style="flex:0 0 80px;">pair</span><span style="flex:0 0 66px;">side</span><span style="flex:0 0 56px;">sess</span><span style="flex:0 0 56px; text-align:right;">r</span><span style="flex:0 0 84px; text-align:right;">rr</span><span style="flex:1; padding-left:16px;">note</span><span style="flex:0 0 28px;"></span>
             </div>
             <div style="flex:1; min-height:120px; overflow-y:auto;">
               <sc-if value="{{ hasTrades }}" hint-placeholder-val="{{ true }}">
@@ -240,8 +240,8 @@
                   <sc-if value="{{ c.hasPnl }}" hint-placeholder-val="{{ false }}">
                     <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:{{ c.pnlColor }}; margin-top:5px;">{{ c.pnl }}</div>
                   </sc-if>
-                  <sc-if value="{{ c.isDay }}" hint-placeholder-val="{{ false }}">
-                    <input value="{{ c.note }}" data-day="{{ c.dayKey }}" onInput="{{ editDayNote }}" placeholder="{{ c.notePh }}" style="width:100%; margin-top:3px; background:transparent; border:none; outline:none; color:#cfcfd4; font-family:'Space Grotesk',sans-serif; font-size:8.5px; padding:0; cursor:text; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  <sc-if value="{{ c.hasNote }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:8.5px; color:#6f6f77; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.note }}</div>
                   </sc-if>
                 </div>
               </sc-for>
@@ -329,8 +329,9 @@
                 <span style="font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:600; width:50px;">{{ e.sym }}</span>
                 <span style="font-size:12px; letter-spacing:.06em; color:#8b8b92; width:62px;">{{ e.dir }}</span>
                 <span style="font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:500; margin-left:auto; color:{{ e.rColor }};">{{ e.r }}</span>
+                <span onClick="{{ delReflection }}" data-id="{{ e.id }}" style="margin-left:18px; color:#56565d; font-size:17px; line-height:1; cursor:pointer; transition:color .2s;" style-hover="color:#cfcfd4;">×</span>
               </div>
-              <div style="{{ e.noteStyle }}">{{ e.note }}</div>
+              <textarea value="{{ e.note }}" data-id="{{ e.id }}" onInput="{{ editReflection }}" onClick="{{ stopProp }}" rows="6" placeholder="write what you saw, what you felt, what you'll repeat…" style="{{ e.noteStyle }}"></textarea>
             </div>
           </sc-for>
         </div>
@@ -538,14 +539,14 @@ class Component extends DCLogic {
   }
 
   loadState() {
-    var trades = [], seq = 1, sheets = [{ id:1, name:'', trades:[] }], activeSheet = 1, sheetSeq = 2, pairs = this.defaultPairs(), reflections = [], dayNotes = {};
+    var trades = [], seq = 1, sheets = [{ id:1, name:'', trades:[] }], activeSheet = 1, sheetSeq = 2, pairs = this.defaultPairs(), reflections = [];
     try {
       var raw = localStorage.getItem('sakuNoirV4');
-      if (raw) { var o = JSON.parse(raw); if (o.trades) trades = o.trades; if (o.seq) seq = o.seq; if (o.sheets) sheets = o.sheets; if (o.activeSheet) activeSheet = o.activeSheet; if (o.sheetSeq) sheetSeq = o.sheetSeq; if (o.pairs) pairs = o.pairs; if (o.reflections) reflections = o.reflections; if (o.dayNotes) dayNotes = o.dayNotes; }
+      if (raw) { var o = JSON.parse(raw); if (o.trades) trades = o.trades; if (o.seq) seq = o.seq; if (o.sheets) sheets = o.sheets; if (o.activeSheet) activeSheet = o.activeSheet; if (o.sheetSeq) sheetSeq = o.sheetSeq; if (o.pairs) pairs = o.pairs; if (o.reflections) reflections = o.reflections; }
     } catch (e) {}
-    return { view:'overview', trades:trades, positions:[], seq:seq, sheets:sheets, activeSheet:activeSheet, sheetSeq:sheetSeq, pairs:pairs, editingSheet:null, openId:null, range:'90', hover:null, clock:this.fmtClock(), reflections:reflections, dayNotes:dayNotes, calMonth:{ y:new Date().getFullYear(), m:new Date().getMonth() }, lightbox:null };
+    return { view:'overview', trades:trades, positions:[], seq:seq, sheets:sheets, activeSheet:activeSheet, sheetSeq:sheetSeq, pairs:pairs, editingSheet:null, openId:null, range:'90', hover:null, clock:this.fmtClock(), reflections:reflections, calMonth:{ y:new Date().getFullYear(), m:new Date().getMonth() }, lightbox:null };
   }
-  persist() { var payload={ trades:this.state.trades, seq:this.state.seq, sheets:this.state.sheets, activeSheet:this.state.activeSheet, sheetSeq:this.state.sheetSeq, pairs:this.state.pairs, reflections:this.state.reflections, dayNotes:this.state.dayNotes }; try { localStorage.setItem('sakuNoirV4', JSON.stringify(payload)); } catch (e) {} try { var sb=window.sakuSB; if(sb && this.userId){ sb.from('journals').upsert({ user_id:this.userId, data:payload, updated_at:new Date().toISOString() }).then(function(){},function(){}); } } catch(e){} }
+  persist() { var payload={ trades:this.state.trades, seq:this.state.seq, sheets:this.state.sheets, activeSheet:this.state.activeSheet, sheetSeq:this.state.sheetSeq, pairs:this.state.pairs, reflections:this.state.reflections }; try { localStorage.setItem('sakuNoirV4', JSON.stringify(payload)); } catch (e) {} try { var sb=window.sakuSB; if(sb && this.userId){ sb.from('journals').upsert({ user_id:this.userId, data:payload, updated_at:new Date().toISOString() }).then(function(){},function(){}); } } catch(e){} }
 
   fmtClock() { var d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
   today() { var d=new Date(); return String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0'); }
@@ -570,7 +571,6 @@ class Component extends DCLogic {
   setRange(r){ this.setState({ range:r, hover:null }); }
   prevMonth(){ this.setState((s)=>{ var m=s.calMonth.m-1, y=s.calMonth.y; if(m<0){m=11;y--;} return { calMonth:{y:y,m:m} }; }); }
   nextMonth(){ this.setState((s)=>{ var m=s.calMonth.m+1, y=s.calMonth.y; if(m>11){m=0;y++;} return { calMonth:{y:y,m:m} }; }); }
-  editDayNote(ev){ var k=ev.currentTarget.dataset.day, v=ev.currentTarget.value; this.setState((s)=>{ var dn=Object.assign({},s.dayNotes); dn[k]=v; return { dayNotes:dn }; }, ()=>this.persist()); }
 
   nextSession(s){ var o=['asia','london','ny']; var i=o.indexOf(s); return o[(i+1)%3]||'asia'; }
   addTrade(){ this.addRow(); }
@@ -584,7 +584,10 @@ class Component extends DCLogic {
 
   // journal
   toggleEntry(ev){ var id=parseInt(ev.currentTarget.dataset.id,10); this.setState((s)=>({ openId: s.openId===id?null:id })); }
-  addReflection(){ var id=Date.now(); this.setState((s)=>({ reflections:[{ id:id, date:this.today(), sym:'—', dir:'note', r:'', note:'write what you saw, what you felt, what you will repeat…' }].concat(s.reflections), openId:id }), ()=>this.persist()); }
+  addReflection(){ var id=Date.now(); this.setState((s)=>({ reflections:[{ id:id, date:this.today(), sym:'—', dir:'note', r:'', note:'' }].concat(s.reflections), openId:id }), ()=>this.persist()); }
+  editReflection(ev){ var id=parseInt(ev.currentTarget.dataset.id,10), v=ev.currentTarget.value; this.setState((s)=>({ reflections:s.reflections.map((e)=> e.id===id?Object.assign({},e,{note:v}):e) }), ()=>this.persist()); }
+  delReflection(ev){ ev.stopPropagation(); var id=parseInt(ev.currentTarget.dataset.id,10); this.setState((s)=>({ reflections:s.reflections.filter((e)=>e.id!==id) }), ()=>this.persist()); }
+  stopProp(ev){ ev.stopPropagation(); }
   commitPair(ev){ var v=(ev.currentTarget.value||'').trim().toUpperCase(); if(!v) return; if((this.state.pairs||[]).indexOf(v)>-1) return; this.setState((s)=>({ pairs:(s.pairs||[]).concat([v]) }), ()=>this.persist()); }
 
   // sheets
@@ -635,10 +638,10 @@ class Component extends DCLogic {
   }
 
   renderVals() {
-    var risk = this.props.riskPerR || 250;
+    var risk = 1;
     var view = this.state.view;
     var trades = (this.activeSheetObj().trades||[]).map(function(t,i){ return { id:i, date:t.date, pair:t.pair, dir:t.dir||'long', session:t.session, r:t.result, notes:t.notes }; });
-    var money = function (v) { var sign=v>=0?'+':'−'; return sign+'$'+Math.abs(Math.round(v)).toLocaleString('en-US'); };
+    var money = function (v) { var sign=v>=0?'+':'−'; return sign+(Math.round(Math.abs(v)*10)/10).toFixed(1)+'R'; };
     var self = this;
 
     // ---- overview stats ----
@@ -678,7 +681,7 @@ class Component extends DCLogic {
     var eqLine=smooth(pts);
     var eqArea=eqLine+' L'+W+','+(H-padBot).toFixed(1)+' L0,'+(H-padBot).toFixed(1)+' Z';
     var lastI=cumArr.length-1, eqLast={ x:X(lastI).toFixed(1), y:Y(smArr[lastI]).toFixed(1) };
-    var yTicks=[]; for(var tv=lo; tv<=hi+0.5; tv+=step){ var sy=Y(tv); yTicks.push({ label:(tv===0?'$0':money(tv)), top:(sy/H*100).toFixed(2)+'%', svgY:sy.toFixed(1) }); }
+    var yTicks=[]; for(var tv=lo; tv<=hi+0.5; tv+=step){ var sy=Y(tv); yTicks.push({ label:(tv===0?'0R':money(tv)), top:(sy/H*100).toFixed(2)+'%', svgY:sy.toFixed(1) }); }
     var xTicks=[]; var nX=Math.min(6,Math.max(1,dateArr.length-1)); for(var tx=0;tx<=nX;tx++){ var ix=Math.round(1+(dateArr.length-2)*(tx/nX)); ix=Math.max(1,Math.min(dateArr.length-1,ix)); if(!xTicks.some(function(o){return o.ix===ix;})) xTicks.push({ ix:ix, label:dateArr[ix]||'', left:(X(ix)/W*100).toFixed(2)+'%' }); }
 
     var hovering = this.state.hover!=null && trades.length>0;
@@ -712,7 +715,7 @@ class Component extends DCLogic {
     var rangeActive=this.state.range;
     var ranges=[['7','7d'],['30','30d'],['90','90d']].map(function(r){ var on=r[0]===rangeActive; return { id:r[0], label:r[1], style:{ fontFamily:"'JetBrains Mono',monospace", fontSize:'11px', padding:'5px 11px', borderRadius:'7px', border:'none', cursor:'pointer', background:on?'rgba(255,255,255,.1)':'transparent', color:on?'#f1f1f3':'#6f6f77', transition:'all .25s ease' } }; });
     var kpis=[
-      { label:'net p&l', value:money(net), valColor: net>=0?'#f1f1f3':'#9a9aa1', bar: net>=0?'rgba(255,255,255,.45)':'rgba(255,255,255,.2)', delta:(net>=0?'↗ up':'↘ down'), deltaColor:'#9a9aa1', caption: trades.length+' trades · '+winRate+'% win' },
+      { label:'net r', value:money(net), valColor: net>=0?'#f1f1f3':'#9a9aa1', bar: net>=0?'rgba(255,255,255,.45)':'rgba(255,255,255,.2)', delta:(net>=0?'↗ up':'↘ down'), deltaColor:'#9a9aa1', caption: trades.length+' trades · '+winRate+'% win' },
       { label:'win rate', value:winRate+'%', valColor:'#f1f1f3', bar:'rgba(255,255,255,.45)', delta:(decided?((winRate>=50?'↗':'↘')+' '+winRate+'%'):'—'), deltaColor:'#9a9aa1', caption:wins+'w · '+losses+'l · '+trades.length+' trades' },
       { label:'profit factor', value:pf.toFixed(2), valColor:'#f1f1f3', bar:'rgba(255,255,255,.45)', delta:(pf>=1?'↗ strong':'↘ weak'), deltaColor:'#9a9aa1', caption:'expectancy '+(expectancy>=0?'+':'')+expectancy.toFixed(2)+'r / trade' },
       { label:'max drawdown', value:money(maxDD), valColor:'#9a9aa1', bar:'rgba(255,255,255,.45)', delta:(maxDD<0?'▽ dip':'— flat'), deltaColor:'#8b8b92', caption:'largest peak-to-trough' }
@@ -723,13 +726,12 @@ class Component extends DCLogic {
     var startDow=(first.getDay()+6)%7, daysInMonth=new Date(cm.y,cm.m+1,0).getDate(), cmm=String(cm.m+1).padStart(2,'0');
     var dayMap={};
     trades.forEach(function(tr){ var parts=(tr.date||'').split('/'); if(parts[0]===cmm){ var dd=parseInt(parts[1],10); if(!dayMap[dd])dayMap[dd]={pnl:0,notes:[],count:0}; var r=parseFloat(tr.r); if(isNaN(r))r=0; dayMap[dd].pnl+=r*risk; dayMap[dd].count++; if(tr.notes)dayMap[dd].notes.push(tr.notes); } });
-    var dayNotes=this.state.dayNotes||{};
     var calCells=[];
-    for(var bi=0;bi<startDow;bi++) calCells.push({ day:'', dayColor:'#56565d', hasPnl:false, pnl:'', pnlColor:'#8b8b92', isDay:false, dayKey:'', note:'', notePh:'', cellStyle:{ minHeight:'58px', padding:'7px 6px', borderTop:'1px solid rgba(255,255,255,.04)' } });
-    for(var cd=1;cd<=daysInMonth;cd++){ var info=dayMap[cd], has=!!info; var dkey=cmm+'/'+String(cd).padStart(2,'0'); var autoNote=(has&&info.notes.length)?info.notes[0]:''; calCells.push({ day:String(cd), dayColor: has?'#cfcfd4':'#56565d', hasPnl:has, pnl: has?money(info.pnl):'', pnlColor: has?(info.pnl>=0?'#e8e8ea':'#9a9aa1'):'#8b8b92', isDay:true, dayKey:dkey, note:(dayNotes[dkey]||''), notePh:(autoNote||'note…'), cellStyle:{ minHeight:'58px', padding:'7px 6px', borderTop:'1px solid rgba(255,255,255,.1)', background: (has||dayNotes[dkey])?'rgba(255,255,255,.045)':'transparent' } }); }
+    for(var bi=0;bi<startDow;bi++) calCells.push({ day:'', dayColor:'#56565d', hasPnl:false, pnl:'', pnlColor:'#8b8b92', hasNote:false, note:'', cellStyle:{ minHeight:'58px', padding:'7px 6px', borderTop:'1px solid rgba(255,255,255,.04)' } });
+    for(var cd=1;cd<=daysInMonth;cd++){ var info=dayMap[cd], has=!!info; calCells.push({ day:String(cd), dayColor: has?'#cfcfd4':'#56565d', hasPnl:has, pnl: has?money(info.pnl):'', pnlColor: has?(info.pnl>=0?'#e8e8ea':'#9a9aa1'):'#8b8b92', hasNote: has&&info.notes.length>0, note: has&&info.notes.length?info.notes[0]:'', cellStyle:{ minHeight:'58px', padding:'7px 6px', borderTop:'1px solid rgba(255,255,255,.1)', background: (has?(info.pnl>=1?'rgba(255,255,255,.15)':(info.pnl<0?'rgba(130,130,140,.14)':'transparent')):'transparent') } }); }
     var calMonthLabel=first.toLocaleString('en-US',{month:'long',year:'numeric'}).toLowerCase();
     // ---- journal entries ----
-    var nb = { overflow:'hidden', borderLeft:'2px solid rgba(255,255,255,.18)', background:'rgba(255,255,255,.02)', fontFamily:"'Space Grotesk',sans-serif", fontWeight:300, fontSize:'14px', lineHeight:1.7, color:'#9a9aa1', paddingLeft:'20px', paddingRight:'20px', transition:'max-height .5s cubic-bezier(.2,.7,.2,1), opacity .4s ease, margin-top .4s ease, padding .4s ease' };
+    var nb = { overflow:'hidden', display:'block', width:'100%', boxSizing:'border-box', resize:'none', outline:'none', borderTop:'none', borderRight:'none', borderBottom:'none', borderLeft:'2px solid rgba(255,255,255,.18)', background:'rgba(255,255,255,.02)', fontFamily:"'Space Grotesk',sans-serif", fontWeight:300, fontSize:'14px', lineHeight:1.7, color:'#9a9aa1', paddingLeft:'20px', paddingRight:'20px', transition:'max-height .5s cubic-bezier(.2,.7,.2,1), opacity .4s ease, margin-top .4s ease, padding .4s ease' };
     var entries=this.state.reflections.map(function(e){ var o=self.state.openId===e.id; return { id:e.id, date:e.date, sym:e.sym, dir:e.dir, r:e.r, note:e.note, rColor: (e.r&&e.r.indexOf('-')===0)?'#9a9aa1':'#e8e8ea', noteStyle: o?Object.assign({},nb,{ maxHeight:'240px', opacity:'1', marginTop:'15px', paddingTop:'16px', paddingBottom:'16px' }):Object.assign({},nb,{ maxHeight:'0px', opacity:'0', marginTop:'0px', paddingTop:'0px', paddingBottom:'0px' }) }; });
 
     // ---- data sheet ----
@@ -774,9 +776,9 @@ class Component extends DCLogic {
       feed:feed, hasTrades:feed.length>0, noTrades:feed.length===0, pairPerf:pairPerf, pairPerfHas:pairPerfHas, pairPerfNone:!pairPerfHas,
       addTrade:()=>this.addTrade(), editTrade:(e)=>this.editTrade(e), toggleDir:(e)=>this.toggleDir(e), toggleSession:(e)=>this.toggleSession(e), delTrade:(e)=>this.delTrade(e), sessStats:sessStats,
       pairOptions: (this.state.pairs||[]).map(function(p){ return { v:p }; }), commitPair:(e)=>this.commitPair(e),
-      calCells:calCells, weekdays:['M','T','W','T','F','S','S'], calMonthLabel:calMonthLabel, prevMonth:()=>this.prevMonth(), nextMonth:()=>this.nextMonth(), editDayNote:(e)=>this.editDayNote(e),
+      calCells:calCells, weekdays:['M','T','W','T','F','S','S'], calMonthLabel:calMonthLabel, prevMonth:()=>this.prevMonth(), nextMonth:()=>this.nextMonth(),
 
-      entries:entries, toggleEntry:(e)=>this.toggleEntry(e), addReflection:()=>this.addReflection(),
+      entries:entries, toggleEntry:(e)=>this.toggleEntry(e), addReflection:()=>this.addReflection(), editReflection:(e)=>this.editReflection(e), delReflection:(e)=>this.delReflection(e), stopProp:(e)=>this.stopProp(e),
 
       shTotalR:d.totalR, shWins:d.wins, shLosses:d.losses, shBe:d.be, shWinRate:d.winRate, shMaxDD:d.maxDD,
       shRows:shRowsView, shHasRows:d.rows.length>0, shEmpty:d.rows.length===0, sheetName:sheet.name, editSheetTitle:(e)=>this.editSheetTitle(e),
