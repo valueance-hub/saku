@@ -58,32 +58,26 @@
     </div>
 
     <nav style="{{ navStyle }}">
-      <div onClick="{{ goOverview }}" onDblClick="{{ startNavEdit }}" data-nav="overview" style="position:relative; padding:11px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
-        <span style="position:absolute; left:0; top:12px; bottom:12px; width:2px; border-radius:2px; background:#f1f1f3; transform:scaleY({{ ovBar }}); transition:transform .4s cubic-bezier(.2,.7,.2,1);"></span>
-        <sc-if value="{{ ovEditing }}" hint-placeholder-val="{{ false }}"><input value="{{ ovLabel }}" data-nav="overview" onInput="{{ renameNav }}" onBlur="{{ stopNavEdit }}" onKeyDown="{{ keyNav }}" autofocus style="width:100%; color:#f1f1f3; font-size:13.5px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.3); outline:none; padding-bottom:2px;"></sc-if>
-        <sc-if value="{{ ovNotEditing }}" hint-placeholder-val="{{ true }}"><span style="font-size:13.5px; color:{{ ovColor }}; transition:color .3s;">{{ ovLabel }}</span></sc-if>
-      </div>
-      <div onClick="{{ goJournal }}" onDblClick="{{ startNavEdit }}" data-nav="journal" style="position:relative; padding:11px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
-        <span style="position:absolute; left:0; top:12px; bottom:12px; width:2px; border-radius:2px; background:#f1f1f3; transform:scaleY({{ jnBar }}); transition:transform .4s cubic-bezier(.2,.7,.2,1);"></span>
-        <sc-if value="{{ jnEditing }}" hint-placeholder-val="{{ false }}"><input value="{{ jnLabel }}" data-nav="journal" onInput="{{ renameNav }}" onBlur="{{ stopNavEdit }}" onKeyDown="{{ keyNav }}" autofocus style="width:100%; color:#f1f1f3; font-size:13.5px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.3); outline:none; padding-bottom:2px;"></sc-if>
-        <sc-if value="{{ jnNotEditing }}" hint-placeholder-val="{{ true }}"><span style="font-size:13.5px; color:{{ jnColor }}; transition:color .3s;">{{ jnLabel }}</span></sc-if>
+      <sc-for list="{{ navItems }}" as="nv" hint-placeholder-count="3">
+        <div onClick="{{ navClick }}" onDblClick="{{ startNavEdit }}" data-nav="{{ nv.key }}" style="position:relative; padding:11px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
+          <span style="position:absolute; left:0; top:12px; bottom:12px; width:2px; border-radius:2px; background:#f1f1f3; transform:scaleY({{ nv.bar }}); transition:transform .4s cubic-bezier(.2,.7,.2,1);"></span>
+          <sc-if value="{{ nv.editing }}" hint-placeholder-val="{{ false }}"><input value="{{ nv.label }}" data-nav="{{ nv.key }}" onInput="{{ renameNav }}" onBlur="{{ stopNavEdit }}" onKeyDown="{{ keyNav }}" autofocus style="width:100%; color:#f1f1f3; font-size:13.5px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.3); outline:none; padding-bottom:2px;"></sc-if>
+          <sc-if value="{{ nv.notEditing }}" hint-placeholder-val="{{ true }}"><span style="font-size:13.5px; color:{{ nv.color }}; transition:color .3s;">{{ nv.label }}</span></sc-if>
+        </div>
+      </sc-for>
+      <div style="{{ sheetNavStyle }}">
+        <sc-for list="{{ sheetsNav }}" as="sh" hint-placeholder-count="1">
+          <div onClick="{{ goSheet }}" onDblClick="{{ startEdit }}" data-id="{{ sh.id }}" style="position:relative; display:flex; align-items:center; gap:6px; padding:8px 12px 8px 28px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
+            <span style="position:absolute; left:14px; top:9px; bottom:9px; width:2px; border-radius:2px; background:#f1f1f3; transform:scaleY({{ sh.bar }}); transition:transform .4s;"></span>
+            <sc-if value="{{ sh.editing }}" hint-placeholder-val="{{ false }}"><input value="{{ sh.name }}" data-id="{{ sh.id }}" onInput="{{ renameSheet }}" onBlur="{{ stopEdit }}" onKeyDown="{{ keyEdit }}" autofocus style="flex:1; min-width:0; color:#f1f1f3; font-size:12.5px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.3); outline:none; padding-bottom:2px;"></sc-if>
+            <sc-if value="{{ sh.notEditing }}" hint-placeholder-val="{{ true }}"><span style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12.5px; color:{{ sh.color }}; transition:color .3s;">{{ sh.name }}</span></sc-if>
+            <span onClick="{{ deleteSheet }}" data-id="{{ sh.id }}" style="flex:none; font-size:15px; line-height:1; color:#48484e; transition:color .25s;" style-hover="color:#cfcfd4;">×</span>
+          </div>
+        </sc-for>
+        <div onClick="{{ addSheet }}" style="display:flex; align-items:center; gap:8px; padding:8px 14px 8px 28px; cursor:pointer; color:#6a6a72; border-radius:8px; transition:color .3s;" style-hover="color:#f1f1f3;"><span style="font-size:14px; font-weight:300;">+</span><span style="font-size:12px;">new sheet</span></div>
       </div>
     </nav>
 
-    <div style="margin-top:26px; padding:0 14px; font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:#56565d;">data</div>
-    <div style="margin-top:10px; display:flex; flex-direction:column; gap:2px;">
-      <sc-for list="{{ sheetsNav }}" as="sh" hint-placeholder-count="1">
-        <div onClick="{{ goSheet }}" onDblClick="{{ startEdit }}" data-id="{{ sh.id }}" style="position:relative; display:flex; align-items:center; gap:6px; padding:10px 12px 10px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
-          <span style="position:absolute; left:0; top:11px; bottom:11px; width:2px; border-radius:2px; background:#f1f1f3; transform:scaleY({{ sh.bar }}); transition:transform .4s;"></span>
-          <sc-if value="{{ sh.editing }}" hint-placeholder-val="{{ false }}"><input value="{{ sh.name }}" data-id="{{ sh.id }}" onInput="{{ renameSheet }}" onBlur="{{ stopEdit }}" onKeyDown="{{ keyEdit }}" autofocus style="flex:1; min-width:0; color:#f1f1f3; font-size:13px; border-bottom:1px solid rgba(255,255,255,.3); padding-bottom:2px;"></sc-if>
-          <sc-if value="{{ sh.notEditing }}" hint-placeholder-val="{{ true }}"><span style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; color:{{ sh.color }}; transition:color .3s;">{{ sh.name }}</span></sc-if>
-          <span onClick="{{ deleteSheet }}" data-id="{{ sh.id }}" style="flex:none; font-size:15px; line-height:1; color:#48484e; transition:color .25s;" style-hover="color:#cfcfd4;">×</span>
-        </div>
-      </sc-for>
-      <div onClick="{{ addSheet }}" style="display:flex; align-items:center; gap:9px; padding:10px 14px; cursor:pointer; color:#6a6a72; border-radius:8px; transition:color .3s;" style-hover="color:#f1f1f3;">
-        <span style="font-size:15px; font-weight:300;">+</span><span style="font-size:12.5px;">new sheet</span>
-      </div>
-    </div>
 
     <div onClick="{{ signOut }}" style="margin-top:auto; padding:9px 14px; cursor:pointer; color:#6a6a72; font-size:12px; letter-spacing:.04em; border-radius:8px; transition:color .3s;" style-hover="color:#f1f1f3;">sign out</div>
     <div style="margin-top:14px; display:flex; align-items:center; justify-content:space-between; padding:0 8px;">
@@ -143,7 +137,7 @@
               </div>
             </div>
 
-            <div style="display:flex; gap:10px; margin-top:22px;">
+            <div style="display:flex; gap:10px; margin-top:30px;">
               <div style="width:48px; height:260px; position:relative; flex:none;">
                 <sc-for list="{{ yTicks }}" as="y" hint-placeholder-count="4">
                   <div style="position:absolute; right:0; top:{{ y.top }}; transform:translateY(-50%); font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#56565d; white-space:nowrap;">{{ y.label }}</div>
@@ -348,6 +342,12 @@
       <!-- ===== DATA (SHEET) ===== -->
       <sc-if value="{{ isData }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex; flex-direction:column; gap:18px; animation:noirView .55s cubic-bezier(.2,.7,.2,1) both;">
+          <div style="{{ chipBarStyle }}">
+            <sc-for list="{{ sheetsNav }}" as="sh" hint-placeholder-count="1">
+              <div onClick="{{ goSheet }}" data-id="{{ sh.id }}" style="{{ sh.chipStyle }}"><span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px;">{{ sh.name }}</span><span onClick="{{ deleteSheet }}" data-id="{{ sh.id }}" style="margin-left:9px; opacity:.55; font-size:14px; line-height:1;">×</span></div>
+            </sc-for>
+            <button onClick="{{ addSheet }}" style="flex:none; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; padding:8px 14px; border-radius:9px; border:1px dashed rgba(255,255,255,.2); background:transparent; color:#8b8b92; font-size:12.5px; cursor:pointer;"><span style="font-size:15px; line-height:1;">+</span>new</button>
+          </div>
           <div>
             <div style="font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:#6f6f77; margin-bottom:7px;">✎ sheet name · click to rename</div>
             <input value="{{ sheetName }}" onInput="{{ editSheetTitle }}" spellcheck="false" placeholder="name this sheet…" style="background:transparent; border:none; outline:none; color:#f1f1f3; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:23px; letter-spacing:-.01em; width:100%; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.16); transition:border-color .3s;" style-focus="border-bottom-color:rgba(255,255,255,.42);" style-hover="border-bottom-color:rgba(255,255,255,.28);">
@@ -577,9 +577,11 @@ class Component extends DCLogic {
 
   go(href){ window.location.href=href; }
   setView(v){ this.setState({ view:v, hover:null }); }
+  goData(){ var s=this.state; var act=s.activeSheet; var ok=s.sheets.some(function(sh){return sh.id===act;}); if(!ok && s.sheets.length){ act=s.sheets[0].id; } this.setState({ view:'data', activeSheet:act, hover:null }); }
   setRange(r){ this.setState({ range:r, hover:null }); }
   prevMonth(){ this.setState((s)=>{ var m=s.calMonth.m-1, y=s.calMonth.y; if(m<0){m=11;y--;} return { calMonth:{y:y,m:m} }; }); }
   startNavEdit(ev){ var k=ev.currentTarget.dataset.nav; this.setState({ editingNav:k }); }
+  navClick(ev){ var k=ev.currentTarget.dataset.nav; if(k==='data'){ this.goData(); } else { this.setView(k); } }
   renameNav(ev){ var k=ev.currentTarget.dataset.nav, v=ev.currentTarget.value; this.setState((s)=>{ var nl=Object.assign({},s.navLabels); nl[k]=v; return { navLabels:nl }; }, ()=>this.persist()); }
   stopNavEdit(){ this.setState({ editingNav:null }, ()=>this.persist()); }
   keyNav(ev){ if(ev.key==='Enter') ev.currentTarget.blur(); }
@@ -696,7 +698,7 @@ class Component extends DCLogic {
     var eqLine=smooth(pts);
     var eqArea=eqLine+' L'+W+','+(H-padBot).toFixed(1)+' L0,'+(H-padBot).toFixed(1)+' Z';
     var lastI=cumArr.length-1, eqLast={ x:X(lastI).toFixed(1), y:Y(smArr[lastI]).toFixed(1) };
-    var yTicks=[]; for(var tv=lo; tv<=hi+0.5; tv+=step){ var sy=Y(tv); yTicks.push({ label:(tv===0?'0R':money(tv)), top:(sy/H*100).toFixed(2)+'%', svgY:sy.toFixed(1) }); }
+    var yTicks=[]; for(var tv=lo; tv<=hi+step*0.001; tv+=step){ var sy=Y(tv); yTicks.push({ label:(tv===0?'0R':money(tv)), top:(sy/H*100).toFixed(2)+'%', svgY:sy.toFixed(1) }); }
     var xTicks=[]; var nX=Math.min(6,Math.max(1,dateArr.length-1)); for(var tx=0;tx<=nX;tx++){ var ix=Math.round(1+(dateArr.length-2)*(tx/nX)); ix=Math.max(1,Math.min(dateArr.length-1,ix)); if(!xTicks.some(function(o){return o.ix===ix;})) xTicks.push({ ix:ix, label:dateArr[ix]||'', left:(X(ix)/W*100).toFixed(2)+'%' }); }
 
     var hovering = this.state.hover!=null && trades.length>0;
@@ -757,7 +759,8 @@ class Component extends DCLogic {
     var shRowsView=d.rows.map(function(t){ var r=parseFloat(t.result); var hasR=!isNaN(r)&&t.result!==''; var hb=hasR?Math.min(100,Math.abs(r)/3*100):0; return Object.assign({},t,{ rColor: !hasR?'#6f6f77':(r>0?'#e8e8ea':(r<0?'#9a9aa1':'#8b8b92')), sideStyle:self.sideStyle(t.dir||'long'), sessAbbr:sessAbbr(t.session), sessStyle:self.sessionStyle(), barStyle:{ height:'6px', width:hb+'%', borderRadius:'3px', background:(r>=0?'#dcdce0':'#7c7c84') }, photoCount:(t.photos||[]).filter(Boolean).length }); });
     var monthly=this.group(sheet.trades, function(t){ var p=(t.date||'').split('/'); var mn=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']; var mi=parseInt(p[0],10); var yr=new Date().getFullYear(); return (mi>=1&&mi<=12)?(mn[mi-1]+' '+yr):'—'; });
     var pairs=this.group(sheet.trades, function(t){ return (t.pair||'').trim().toUpperCase(); });
-    var sheetsNav=this.state.sheets.map(function(sh){ var on=view==='data'&&sh.id===self.state.activeSheet; var ed=self.state.editingSheet===sh.id; return { id:sh.id, name:sh.name||'untitled', bar:on?1:0, color:on?'#f1f1f3':'#8b8b92', editing:ed, notEditing:!ed }; });
+    var navItems=[{k:'overview',d:'overview'},{k:'journal',d:'journal'},{k:'data',d:'data'}].map(function(n){ var on=view===n.k; var ed=self.state.editingNav===n.k; var nl=self.state.navLabels||{}; return { key:n.k, label:(nl[n.k]||n.d), color:on?'#f1f1f3':'#8b8b92', bar:on?1:0, editing:ed, notEditing:!ed }; });
+    var sheetsNav=this.state.sheets.map(function(sh){ var on=view==='data'&&sh.id===self.state.activeSheet; var ed=self.state.editingSheet===sh.id; return { id:sh.id, name:sh.name||'untitled', bar:on?1:0, color:on?'#f1f1f3':'#8b8b92', editing:ed, notEditing:!ed, chipStyle:{ display:'inline-flex', alignItems:'center', flex:'none', whiteSpace:'nowrap', padding:'8px 14px', borderRadius:'9px', cursor:'pointer', fontSize:'12.5px', border:'1px solid '+(on?'rgba(255,255,255,.28)':'rgba(255,255,255,.1)'), background:(on?'rgba(255,255,255,.08)':'rgba(255,255,255,.02)'), color:(on?'#f1f1f3':'#9a9aa1'), transition:'all .25s' } }; });
 
     var lbRow=this.state.lightbox, lbOpen=lbRow!=null;
     var lbTrade = lbOpen ? (sheet.trades[lbRow]||{}) : {};
@@ -777,11 +780,12 @@ class Component extends DCLogic {
       isOverview: view==='overview', isJournal: view==='journal', isData: view==='data',
       ovColor: view==='overview'?'#f1f1f3':'#8b8b92', jnColor: view==='journal'?'#f1f1f3':'#8b8b92',
       ovBar: view==='overview'?1:0, jnBar: view==='journal'?1:0,
-      goOverview: () => this.setView('overview'), goJournal: () => this.setView('journal'),
+      goOverview: () => this.setView('overview'), goJournal: () => this.setView('journal'), goData: () => this.goData(), dtColor: view==='data'?'#f1f1f3':'#8b8b92', dtBar: view==='data'?1:0,
+      sheetNavStyle: _mob?{display:'none'}:{display:'flex', flexDirection:'column', gap:'2px', marginTop:'2px'}, chipBarStyle: _mob?{display:'flex', alignItems:'center', gap:'8px', overflowX:'auto', paddingBottom:'6px'}:{display:'none'},
       viewTitle: titles[view], viewSub: subs[view],
       ovLabel:((this.state.navLabels&&this.state.navLabels.overview)||'overview'), jnLabel:((this.state.navLabels&&this.state.navLabels.journal)||'journal'),
       ovEditing:this.state.editingNav==='overview', ovNotEditing:this.state.editingNav!=='overview', jnEditing:this.state.editingNav==='journal', jnNotEditing:this.state.editingNav!=='journal',
-      startNavEdit:(e)=>this.startNavEdit(e), renameNav:(e)=>this.renameNav(e), stopNavEdit:()=>this.stopNavEdit(), keyNav:(e)=>this.keyNav(e),
+      startNavEdit:(e)=>this.startNavEdit(e), renameNav:(e)=>this.renameNav(e), stopNavEdit:()=>this.stopNavEdit(), keyNav:(e)=>this.keyNav(e), navItems:navItems, navClick:(e)=>this.navClick(e),
 
       sheetsNav: sheetsNav,
       goSheet:(e)=>this.goSheet(e), addSheet:()=>this.addSheet(), startEdit:(e)=>this.startEdit(e), renameSheet:(e)=>this.renameSheet(e), stopEdit:()=>this.stopEdit(), keyEdit:(e)=>this.keyEdit(e), deleteSheet:(e)=>this.deleteSheet(e),
