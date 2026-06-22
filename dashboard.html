@@ -40,6 +40,11 @@
   @keyframes sakuSheen { 0%{ left:-65%; } 55%,100%{ left:130%; } }
   @keyframes sakuBoot { from{opacity:0; transform:translateY(10px) scale(.995);} to{opacity:1; transform:translateY(0) scale(1);} }
   @keyframes sakuRise { from{opacity:0; transform:translateY(26px) scale(.985);} to{opacity:1; transform:translateY(0) scale(1);} }
+  @keyframes noirFadeM { from{opacity:0;} to{opacity:1;} }
+  @media (max-width:768px){
+    div[style*="sakuBoot"]{ animation: noirFadeM .55s ease both !important; }
+    div[style*="sakuRise"]{ animation: noirFadeM .55s ease both !important; }
+  }
 </style>
 </helmet>
 <div style="position:relative; min-height:100vh; background:radial-gradient(125% 55% at 50% -12%, rgba(255,255,255,.1), transparent 50%), radial-gradient(100% 90% at 50% 125%, rgba(0,0,0,.4), transparent 58%), #15151a; color:#f1f1f3; font-family:'Space Grotesk',sans-serif; animation:sakuBoot .7s cubic-bezier(.2,.7,.2,1) both; display:flex; flex-direction:{{ rootDir }}; overflow:{{ rootOver }};">
@@ -88,7 +93,7 @@
 
   <!-- ===================== MAIN ===================== -->
   <main style="position:relative; z-index:5; flex:1; min-width:0; display:flex; flex-direction:column; overflow:{{ mainOver }};">
-    <div style="position:absolute; top:72px; left:0; right:0; height:1px; z-index:3; pointer-events:none; background:linear-gradient(90deg, transparent, rgba(255,255,255,.5) 30%, rgba(255,255,255,.66) 50%, rgba(255,255,255,.5) 70%, transparent); box-shadow:0 0 22px 1px rgba(255,255,255,.26); animation:noirGlow 5s ease-in-out infinite;"></div>
+    <div style="{{ glowLineStyle }}"></div>
 
     <!-- header -->
     <header style="position:relative; z-index:4; display:flex; align-items:flex-end; justify-content:space-between; padding:{{ headPad }};">
@@ -251,7 +256,6 @@
             <div style="display:flex; align-items:flex-end; justify-content:space-between;">
               <div>
                 <div style="font-size:11px; letter-spacing:.13em; color:#7c7c84;">session win rate</div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:44px; font-weight:500; line-height:1; margin-top:10px;">{{ winRate }}<span style="font-size:20px; color:#6f6f77;">%</span></div>
               </div>
               <div style="display:flex; gap:26px;">
                 <div style="text-align:right;">
@@ -772,6 +776,7 @@ class Component extends DCLogic {
     return {
       grainRef: (el) => { if (el) el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"; },
       chartRef: (el) => { this.chartEl = el; },
+      glowLineStyle: _mob ? {display:'none'} : { position:'absolute', top:'72px', left:'0', right:'0', height:'1px', zIndex:3, pointerEvents:'none', background:'linear-gradient(90deg, transparent, rgba(255,255,255,.5) 30%, rgba(255,255,255,.66) 50%, rgba(255,255,255,.5) 70%, transparent)', boxShadow:'0 0 22px 1px rgba(255,255,255,.26)', animation:'noirGlow 5s ease-in-out infinite' },
       kpiCols: _mob?'1fr 1fr':(_tab?'1fr 1fr':'repeat(4,1fr)'), ovCols: _tab?'1fr':'1fr 1fr', sumCols: _mob?'repeat(2,1fr)':(_tab?'repeat(3,1fr)':'repeat(6,1fr)'), mpCols: _tab?'1fr':'1fr 1fr', rootDir: _mob?'column':'row', rootOver: _mob?'visible':'hidden', mainOver: _mob?'visible':'hidden', contentOver: _mob?'visible':'auto', contentPad: _mob?'8px 14px 26px':'6px 34px 30px', headPad: _mob?'14px 16px 10px':'22px 34px 18px', asideStyle: { position:'relative', zIndex:5, width:_mob?'100%':'232px', flex:'none', borderRight:_mob?'none':'1px solid rgba(255,255,255,.06)', borderBottom:_mob?'1px solid rgba(255,255,255,.08)':'none', padding:_mob?'10px 14px':'24px 20px 22px', display:'flex', flexDirection:_mob?'row':'column', flexWrap:_mob?'wrap':'nowrap', alignItems:_mob?'center':'stretch', columnGap:_mob?'16px':'0px', rowGap:_mob?'6px':'0px', background:'rgba(255,255,255,.02)' }, navStyle: { marginTop:_mob?'0px':'34px', display:'flex', flexDirection:_mob?'row':'column', gap:'2px', flexWrap:'wrap' },
       goLogin: () => this.go('index.html'),
       signOut: () => this.signOut(),
