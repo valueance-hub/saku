@@ -38,7 +38,7 @@
   @keyframes noirView { from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
 </style>
 </helmet>
-<div style="position:relative; min-height:100vh; background:radial-gradient(125% 55% at 50% -12%, rgba(255,255,255,.1), transparent 50%), radial-gradient(100% 90% at 50% 125%, rgba(0,0,0,.4), transparent 58%), #15151a; color:#f1f1f3; font-family:'Space Grotesk',sans-serif; display:flex; overflow:hidden;">
+<div style="position:relative; min-height:100vh; background:radial-gradient(125% 55% at 50% -12%, rgba(255,255,255,.1), transparent 50%), radial-gradient(100% 90% at 50% 125%, rgba(0,0,0,.4), transparent 58%), #15151a; color:#f1f1f3; font-family:'Space Grotesk',sans-serif; display:flex; flex-direction:{{ rootDir }}; overflow:{{ rootOver }};">
 
   <datalist id="sakuPairs"><sc-for list="{{ pairOptions }}" as="po" hint-placeholder-count="9"><option value="{{ po.v }}"></option></sc-for></datalist>
 
@@ -47,14 +47,14 @@
   <div style="position:fixed; inset:0; z-index:49; pointer-events:none; box-shadow:inset 0 0 240px 40px rgba(0,0,0,.4);"></div>
 
   <!-- ===================== SIDEBAR ===================== -->
-  <aside style="position:relative; z-index:5; width:232px; flex:none; border-right:1px solid rgba(255,255,255,.06); padding:24px 20px 22px; display:flex; flex-direction:column; background:rgba(255,255,255,.02);">
+  <aside style="{{ asideStyle }}">
     <div onClick="{{ goLogin }}" style="display:flex; align-items:baseline; gap:11px; cursor:pointer; padding:0 6px;">
       <span style="font-family:'Shippori Mincho B1',serif; font-size:22px; font-weight:600;">朔</span>
       <span style="font-size:15px; font-weight:600; letter-spacing:.02em;">saku</span>
       <span style="font-size:11px; font-weight:300; color:#6a6a72;">desk</span>
     </div>
 
-    <nav style="margin-top:34px; display:flex; flex-direction:column; gap:2px;">
+    <nav style="{{ navStyle }}">
       <div onClick="{{ goOverview }}" style="position:relative; padding:11px 14px; cursor:pointer; border-radius:8px; transition:background .3s;" style-hover="background:rgba(255,255,255,.04);">
         <span style="position:absolute; left:0; top:12px; bottom:12px; width:2px; border-radius:2px; background:#f1f1f3; transform:scaleY({{ ovBar }}); transition:transform .4s cubic-bezier(.2,.7,.2,1);"></span>
         <span style="font-size:13.5px; color:{{ ovColor }}; transition:color .3s;">overview</span>
@@ -88,11 +88,11 @@
   </aside>
 
   <!-- ===================== MAIN ===================== -->
-  <main style="position:relative; z-index:5; flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden;">
+  <main style="position:relative; z-index:5; flex:1; min-width:0; display:flex; flex-direction:column; overflow:{{ mainOver }};">
     <div style="position:absolute; top:72px; left:0; right:0; height:1px; z-index:3; pointer-events:none; background:linear-gradient(90deg, transparent, rgba(255,255,255,.5) 30%, rgba(255,255,255,.66) 50%, rgba(255,255,255,.5) 70%, transparent); box-shadow:0 0 22px 1px rgba(255,255,255,.26); animation:noirGlow 5s ease-in-out infinite;"></div>
 
     <!-- header -->
-    <header style="position:relative; z-index:4; display:flex; align-items:flex-end; justify-content:space-between; padding:22px 34px 18px;">
+    <header style="position:relative; z-index:4; display:flex; align-items:flex-end; justify-content:space-between; padding:{{ headPad }};">
       <div>
         <div style="font-size:21px; font-weight:600; letter-spacing:-.01em;">{{ viewTitle }}</div>
         <div style="font-size:12.5px; font-weight:300; font-style:italic; color:#6a6a72; margin-top:3px;">{{ viewSub }}</div>
@@ -102,13 +102,13 @@
       </div>
     </header>
 
-    <div style="position:relative; z-index:4; flex:1; min-height:0; overflow-y:auto; padding:6px 34px 30px;">
+    <div style="position:relative; z-index:4; flex:1; min-height:0; overflow-y:{{ contentOver }}; padding:{{ contentPad }};">
 
       <!-- ===== OVERVIEW ===== -->
       <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
         <div style="display:flex; flex-direction:column; gap:16px; animation:noirView .55s cubic-bezier(.2,.7,.2,1) both;">
 
-          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+          <div style="display:grid; grid-template-columns:{{ kpiCols }}; gap:16px;">
             <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
               <div style="position:relative; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:18px 20px; overflow:hidden;">
                 <div style="position:absolute; left:0; top:0; bottom:0; width:2px; background:{{ k.bar }};"></div>
@@ -122,7 +122,7 @@
             </sc-for>
           </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:stretch;">
+          <div style="display:grid; grid-template-columns:{{ ovCols }}; gap:16px; align-items:stretch;">
           <div style="display:flex; flex-direction:column; gap:16px; min-width:0;">
           <!-- equity chart -->
           <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:22px 24px;">
@@ -348,7 +348,7 @@
             <input value="{{ sheetName }}" onInput="{{ editSheetTitle }}" spellcheck="false" placeholder="name this sheet…" style="background:transparent; border:none; outline:none; color:#f1f1f3; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:23px; letter-spacing:-.01em; width:100%; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.16); transition:border-color .3s;" style-focus="border-bottom-color:rgba(255,255,255,.42);" style-hover="border-bottom-color:rgba(255,255,255,.28);">
             <div style="font-style:italic; font-size:12.5px; color:#6a6a72; margin-top:6px;">cells are editable — click any value to change it</div>
           </div>
-          <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:14px;">
+          <div style="display:grid; grid-template-columns:{{ sumCols }}; gap:14px;">
             <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:18px 20px;"><div style="font-size:10px; letter-spacing:.14em; color:#6f6f77;">total r</div><div style="font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:500; margin-top:11px;">{{ shTotalR }}</div></div>
             <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:18px 20px;"><div style="font-size:10px; letter-spacing:.14em; color:#6f6f77;">wins</div><div style="font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:500; margin-top:11px;">{{ shWins }}</div></div>
             <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:18px 20px;"><div style="font-size:10px; letter-spacing:.14em; color:#6f6f77;">losses</div><div style="font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:500; margin-top:11px; color:#9a9aa1;">{{ shLosses }}</div></div>
@@ -408,7 +408,7 @@
             </div>
           </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+          <div style="display:grid; grid-template-columns:{{ mpCols }}; gap:18px;">
             <div style="background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.1); border-radius:13px; padding:22px 24px;">
               <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#7c7c84;">monthly performance</div>
               <div style="display:flex; margin-top:18px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.08); font-size:10px; color:#56565d;">
@@ -547,7 +547,7 @@ class Component extends DCLogic {
       var raw = localStorage.getItem('sakuNoirV4');
       if (raw) { var o = JSON.parse(raw); if (o.trades) trades = o.trades; if (o.seq) seq = o.seq; if (o.sheets) sheets = o.sheets; if (o.activeSheet) activeSheet = o.activeSheet; if (o.sheetSeq) sheetSeq = o.sheetSeq; if (o.pairs) pairs = o.pairs; if (o.reflections) reflections = o.reflections; }
     } catch (e) {}
-    return { view:'overview', trades:trades, positions:[], seq:seq, sheets:sheets, activeSheet:activeSheet, sheetSeq:sheetSeq, pairs:pairs, editingSheet:null, openId:null, range:'90', hover:null, clock:this.fmtClock(), reflections:reflections, calMonth:{ y:new Date().getFullYear(), m:new Date().getMonth() }, lightbox:null };
+    return { view:'overview', trades:trades, positions:[], seq:seq, sheets:sheets, activeSheet:activeSheet, sheetSeq:sheetSeq, pairs:pairs, editingSheet:null, openId:null, range:'90', hover:null, clock:this.fmtClock(), reflections:reflections, vw:(typeof window!=='undefined'?window.innerWidth:1200), calMonth:{ y:new Date().getFullYear(), m:new Date().getMonth() }, lightbox:null };
   }
   persist() { var payload={ trades:this.state.trades, seq:this.state.seq, sheets:this.state.sheets, activeSheet:this.state.activeSheet, sheetSeq:this.state.sheetSeq, pairs:this.state.pairs, reflections:this.state.reflections }; try { localStorage.setItem('sakuNoirV4', JSON.stringify(payload)); } catch (e) {} try { var sb=window.sakuSB; if(sb && this.userId){ sb.from('journals').upsert({ user_id:this.userId, data:payload, updated_at:new Date().toISOString() }).then(function(){},function(){}); } } catch(e){} }
 
@@ -557,6 +557,8 @@ class Component extends DCLogic {
   componentDidMount() {
     var self=this;
     this.initSupabase();
+    this._rsz = function(){ self.setState({ vw: window.innerWidth }); };
+    window.addEventListener('resize', this._rsz);
     this._esc = function(e){ if(e.key!=='Escape') return; if(self.state.zoomImg!=null) self.setState({ zoomImg:null }); else if(self.state.lightbox!=null) self.setState({ lightbox:null }); };
     document.addEventListener('keydown', this._esc);
     this._clk = setInterval(function(){ self.setState({ clock:self.fmtClock() }); }, 20000);
@@ -565,7 +567,7 @@ class Component extends DCLogic {
       self.setState(function (s) { return { positions: s.positions.map(function (p) { var step=(Math.random()-0.48)*p.vol; return Object.assign({},p,{ last:Math.round((p.last+step)*100)/100 }); }) }; });
     }, 1300);
   }
-  componentWillUnmount() { if (this._int) clearInterval(this._int); if (this._clk) clearInterval(this._clk); if (this._esc) document.removeEventListener('keydown', this._esc); }
+  componentWillUnmount() { if (this._int) clearInterval(this._int); if (this._clk) clearInterval(this._clk); if (this._esc) document.removeEventListener('keydown', this._esc); if (this._rsz) window.removeEventListener('resize', this._rsz); }
   initSupabase(){ var self=this, sb=window.sakuSB; if(!sb) return; sb.auth.getSession().then(function(res){ var session=res && res.data && res.data.session; if(!session){ window.location.href='index.html'; return; } self.userId=session.user.id; sb.from('journals').select('data').eq('user_id', self.userId).maybeSingle().then(function(r){ try{ if(r && r.data && r.data.data){ self.setState(r.data.data); } }catch(e){} }); }); }
   signOut(){ var sb=window.sakuSB; if(sb){ sb.auth.signOut().then(function(){ window.location.href='index.html'; }); } else { window.location.href='index.html'; } }
 
@@ -643,6 +645,7 @@ class Component extends DCLogic {
 
   renderVals() {
     var risk = 1;
+    var _vw = this.state.vw || (typeof window!=='undefined'?window.innerWidth:1200); var _mob = _vw <= 768; var _tab = _vw <= 1024;
     var view = this.state.view;
     var trades = (this.activeSheetObj().trades||[]).map(function(t,i){ return { id:i, date:t.date, pair:t.pair, dir:t.dir||'long', session:t.session, r:t.result, notes:t.notes }; });
     var money = function (v) { var sign=v>=0?'+':'−'; return sign+(Math.round(Math.abs(v)*10)/10).toFixed(1)+'R'; };
@@ -757,6 +760,7 @@ class Component extends DCLogic {
     return {
       grainRef: (el) => { if (el) el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"; },
       chartRef: (el) => { this.chartEl = el; },
+      kpiCols: _mob?'1fr 1fr':(_tab?'1fr 1fr':'repeat(4,1fr)'), ovCols: _tab?'1fr':'1fr 1fr', sumCols: _mob?'repeat(2,1fr)':(_tab?'repeat(3,1fr)':'repeat(6,1fr)'), mpCols: _tab?'1fr':'1fr 1fr', rootDir: _mob?'column':'row', rootOver: _mob?'visible':'hidden', mainOver: _mob?'visible':'hidden', contentOver: _mob?'visible':'auto', contentPad: _mob?'8px 14px 26px':'6px 34px 30px', headPad: _mob?'14px 16px 10px':'22px 34px 18px', asideStyle: { position:'relative', zIndex:5, width:_mob?'100%':'232px', flex:'none', borderRight:_mob?'none':'1px solid rgba(255,255,255,.06)', borderBottom:_mob?'1px solid rgba(255,255,255,.08)':'none', padding:_mob?'10px 14px':'24px 20px 22px', display:'flex', flexDirection:_mob?'row':'column', flexWrap:_mob?'wrap':'nowrap', alignItems:_mob?'center':'stretch', columnGap:_mob?'16px':'0px', rowGap:_mob?'6px':'0px', background:'rgba(255,255,255,.02)' }, navStyle: { marginTop:_mob?'0px':'34px', display:'flex', flexDirection:_mob?'row':'column', gap:'2px', flexWrap:'wrap' },
       goLogin: () => this.go('index.html'),
       signOut: () => this.signOut(),
       clock: this.state.clock,

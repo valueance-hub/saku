@@ -26,6 +26,7 @@
   if (window.__sakuLivingInit) return;
   window.__sakuLivingInit = true;
   function init(){
+    if ((((navigator.maxTouchPoints||0) > 0) || ((window.innerWidth||999) <= 1024))) return;
     var NS='http://www.w3.org/2000/svg';
     if (document.getElementById('sakuLiving')) return;
     var svg=document.createElementNS(NS,'svg');
@@ -208,7 +209,7 @@ class Component extends DCLogic {
     const host = this.host;
     if (!host || host.dataset.seeded) return;
     host.dataset.seeded = '1';
-    const N = 220;
+    const N = (((navigator.maxTouchPoints||0) > 0) || ((window.innerWidth||999) <= 1024)) ? 22 : 220;
     for (let i = 0; i < N; i++) {
       const big = Math.random() < 0.18;
       const size = big ? (3 + Math.random() * 3.5) : (0.6 + Math.random() * 2);
@@ -278,6 +279,7 @@ class Component extends DCLogic {
     try {
       var NS = 'http://www.w3.org/2000/svg';
       var doc = document;
+      if ((((navigator.maxTouchPoints||0) > 0) || ((window.innerWidth||999) <= 1024))) { var imL = doc.querySelector('img'); if (imL) imL.style.filter = 'grayscale(1) contrast(1.05) brightness(.98)'; return; }
       if (!doc.getElementById('sakuLiving')) {
         var svg = doc.createElementNS(NS, 'svg');
         svg.setAttribute('aria-hidden', 'true');
