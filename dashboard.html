@@ -457,6 +457,13 @@
     </div>
   </main>
 
+  <sc-if value="{{ canUndo }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:120; display:flex; align-items:center; gap:16px; background:#0c0c0f; border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:11px 16px; box-shadow:0 20px 50px -20px rgba(0,0,0,.8);">
+      <span style="font-size:13px; color:#cfcfd4; white-space:nowrap;">deleted</span>
+      <button onClick="{{ undoAction }}" style="background:#f1f1f3; color:#0a0a0b; border:none; border-radius:8px; padding:7px 16px; font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; cursor:pointer;">undo</button>
+      <span onClick="{{ dismissUndo }}" style="color:#56565d; font-size:18px; line-height:1; cursor:pointer;">×</span>
+    </div>
+  </sc-if>
   <sc-if value="{{ lbOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeLightboxBg }}" data-bg="1" style="position:fixed; inset:0; z-index:80; background:rgba(5,5,7,.86); backdrop-filter:blur(7px); display:flex; align-items:center; justify-content:center; padding:42px;">
       <div style="background:#0c0c0f; border:1px solid rgba(255,255,255,.1); border-radius:15px; padding:24px 26px; max-width:820px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 30px 80px -20px rgba(0,0,0,.8);">
@@ -555,8 +562,11 @@ class Component extends DCLogic {
       var raw = localStorage.getItem('sakuNoirV4');
       if (raw) { var o = JSON.parse(raw); if (o.trades) trades = o.trades; if (o.seq) seq = o.seq; if (o.sheets) sheets = o.sheets; if (o.activeSheet) activeSheet = o.activeSheet; if (o.sheetSeq) sheetSeq = o.sheetSeq; if (o.pairs) pairs = o.pairs; if (o.reflections) reflections = o.reflections; if (o.navLabels) navLabels = o.navLabels; }
     } catch (e) {}
-    return { view:'overview', trades:trades, positions:[], seq:seq, sheets:sheets, activeSheet:activeSheet, sheetSeq:sheetSeq, pairs:pairs, navLabels:navLabels, editingNav:null, editingSheet:null, openId:null, range:'90', hover:null, clock:this.fmtClock(), reflections:reflections, vw:(typeof window!=='undefined'?window.innerWidth:1200), calMonth:{ y:new Date().getFullYear(), m:new Date().getMonth() }, lightbox:null };
+    return { view:'overview', trades:trades, positions:[], seq:seq, sheets:sheets, activeSheet:activeSheet, sheetSeq:sheetSeq, pairs:pairs, navLabels:navLabels, editingNav:null, editingSheet:null, openId:null, range:'90', hover:null, clock:this.fmtClock(), reflections:reflections, vw:(typeof window!=='undefined'?window.innerWidth:1200), calMonth:{ y:new Date().getFullYear(), m:new Date().getMonth() }, undo:null, lightbox:null };
   }
+  _snap(){ var s=this.state; return { trades:s.trades, seq:s.seq, sheets:s.sheets, activeSheet:s.activeSheet, sheetSeq:s.sheetSeq, pairs:s.pairs, reflections:s.reflections, navLabels:s.navLabels }; }
+  undoAction(){ var u=this.state.undo; if(!u) return; this.setState({ trades:u.trades, seq:u.seq, sheets:u.sheets, activeSheet:u.activeSheet, sheetSeq:u.sheetSeq, pairs:u.pairs, reflections:u.reflections, navLabels:u.navLabels, undo:null }, ()=>this.persist()); }
+  dismissUndo(){ this.setState({ undo:null }); }
   persist() { var payload={ trades:this.state.trades, seq:this.state.seq, sheets:this.state.sheets, activeSheet:this.state.activeSheet, sheetSeq:this.state.sheetSeq, pairs:this.state.pairs, reflections:this.state.reflections, navLabels:this.state.navLabels }; try { localStorage.setItem('sakuNoirV4', JSON.stringify(payload)); } catch (e) {} try { var sb=window.sakuSB; if(sb && this.userId){ sb.from('journals').upsert({ user_id:this.userId, data:payload, updated_at:new Date().toISOString() }).then(function(){},function(){}); } } catch(e){} }
 
   fmtClock() { var d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
@@ -596,7 +606,7 @@ class Component extends DCLogic {
   toggleSession(ev){ var row=parseInt(ev.currentTarget.dataset.id,10), id=this.state.activeSheet; this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.map((t,i)=> i===row?Object.assign({},t,{session:this.nextSession(t.session)}):t) }):sh) }), ()=>this.persist()); }
   editTrade(ev){ var row=parseInt(ev.currentTarget.dataset.id,10), f=ev.currentTarget.dataset.field, v=ev.currentTarget.value, id=this.state.activeSheet; if(f==='r')f='result'; this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.map((t,i)=> i===row?Object.assign({},t,{[f]:v}):t) }):sh) }), ()=>this.persist()); }
   toggleDir(ev){ var row=parseInt(ev.currentTarget.dataset.id,10), id=this.state.activeSheet; this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.map((t,i)=> i===row?Object.assign({},t,{dir:t.dir==='long'?'short':'long'}):t) }):sh) }), ()=>this.persist()); }
-  delTrade(ev){ var row=parseInt(ev.currentTarget.dataset.id,10), id=this.state.activeSheet; this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.filter((t,i)=> i!==row) }):sh) }), ()=>this.persist()); }
+  delTrade(ev){ var row=parseInt(ev.currentTarget.dataset.id,10), id=this.state.activeSheet, snap=this._snap(); this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.filter((t,i)=> i!==row) }):sh), undo:snap }), ()=>this.persist()); }
 
   onHover(ev){ var el=this.chartEl; if(!el) return; var rect=el.getBoundingClientRect(); var frac=Math.max(0,Math.min(1,(ev.clientX-rect.left)/rect.width)); this.setState({ hover:frac }); }
   offHover(){ this.setState({ hover:null }); }
@@ -605,7 +615,7 @@ class Component extends DCLogic {
   toggleEntry(ev){ var id=parseInt(ev.currentTarget.dataset.id,10); this.setState((s)=>({ openId: s.openId===id?null:id })); }
   addReflection(){ var id=Date.now(); this.setState((s)=>({ reflections:[{ id:id, date:this.today(), sym:'—', dir:'note', r:'', note:'' }].concat(s.reflections), openId:id }), ()=>this.persist()); }
   editReflection(ev){ var id=parseInt(ev.currentTarget.dataset.id,10), v=ev.currentTarget.value; this.setState((s)=>({ reflections:s.reflections.map((e)=> e.id===id?Object.assign({},e,{note:v}):e) }), ()=>this.persist()); }
-  delReflection(ev){ ev.stopPropagation(); var id=parseInt(ev.currentTarget.dataset.id,10); this.setState((s)=>({ reflections:s.reflections.filter((e)=>e.id!==id) }), ()=>this.persist()); }
+  delReflection(ev){ ev.stopPropagation(); var id=parseInt(ev.currentTarget.dataset.id,10), snap=this._snap(); this.setState((s)=>({ reflections:s.reflections.filter((e)=>e.id!==id), undo:snap }), ()=>this.persist()); }
   stopProp(ev){ ev.stopPropagation(); }
   saveEntry(ev){ ev.stopPropagation(); this.setState({ openId:null }, ()=>this.persist()); }
   commitPair(ev){ var v=(ev.currentTarget.value||'').trim().toUpperCase(); if(!v) return; if((this.state.pairs||[]).indexOf(v)>-1) return; this.setState((s)=>({ pairs:(s.pairs||[]).concat([v]) }), ()=>this.persist()); }
@@ -619,7 +629,7 @@ class Component extends DCLogic {
   stopEdit(){ this.setState({ editingSheet:null }, ()=>this.persist()); }
   editSheetTitle(ev){ var v=ev.currentTarget.value, id=this.state.activeSheet; this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{name:v}):sh) }), ()=>this.persist()); }
   keyEdit(ev){ if(ev.key==='Enter') ev.currentTarget.blur(); }
-  deleteSheet(ev){ ev.stopPropagation(); var id=parseInt(ev.currentTarget.dataset.id,10); this.setState((s)=>{ var sheets=s.sheets.filter((sh)=>sh.id!==id); var ns={ sheets:sheets }; if(s.activeSheet===id){ if(sheets.length){ ns.activeSheet=sheets[0].id; } else { ns.view='overview'; ns.activeSheet=null; } } if(s.editingSheet===id) ns.editingSheet=null; return ns; }, ()=>this.persist()); }
+  deleteSheet(ev){ ev.stopPropagation(); var id=parseInt(ev.currentTarget.dataset.id,10), snap=this._snap(); this.setState((s)=>{ var sheets=s.sheets.filter((sh)=>sh.id!==id); var ns={ sheets:sheets, undo:snap }; if(s.activeSheet===id){ if(sheets.length){ ns.activeSheet=sheets[0].id; } else { ns.view='overview'; ns.activeSheet=null; } } if(s.editingSheet===id) ns.editingSheet=null; return ns; }, ()=>this.persist()); }
   addRow(){ var id=this.state.activeSheet; this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.concat([{ date:this.today(), time:'', pair:'', dir:'long', session:'london', setup:'', entryType:'', tp1:'', tp2:'', result:'', notes:'', photos:[] }]) }):sh) }), ()=>this.persist()); }
   updatePhoto(ev){ var id=this.state.activeSheet,row=parseInt(ev.currentTarget.dataset.row,10),idx=parseInt(ev.currentTarget.dataset.idx,10),v=ev.currentTarget.value; this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.map((t,i)=>{ if(i!==row) return t; var ph=(t.photos||[]).slice(); ph[idx]=v; return Object.assign({},t,{photos:ph}); }) }):sh) }), ()=>this.persist()); }
   allowDrop(ev){ if(ev.preventDefault) ev.preventDefault(); }
@@ -636,7 +646,7 @@ class Component extends DCLogic {
   toggleRowSession(ev){ var id=this.state.activeSheet,row=parseInt(ev.currentTarget.dataset.row,10); this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.map((t,i)=> i===row?Object.assign({},t,{session:this.nextSession(t.session)}):t) }):sh) }), ()=>this.persist()); }
   updateCell(ev){ var id=this.state.activeSheet,row=parseInt(ev.currentTarget.dataset.row,10),f=ev.currentTarget.dataset.field,v=ev.currentTarget.value; this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.map((t,i)=> i===row?Object.assign({},t,{[f]:v}):t) }):sh) }), ()=>this.persist()); }
   toggleRowDir(ev){ var id=this.state.activeSheet,row=parseInt(ev.currentTarget.dataset.row,10); this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.map((t,i)=> i===row?Object.assign({},t,{dir:t.dir==='long'?'short':'long'}):t) }):sh) }), ()=>this.persist()); }
-  delRow(ev){ var id=this.state.activeSheet,row=parseInt(ev.currentTarget.dataset.row,10); this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.filter((t,i)=>i!==row) }):sh) }), ()=>this.persist()); }
+  delRow(ev){ var id=this.state.activeSheet,row=parseInt(ev.currentTarget.dataset.row,10), snap=this._snap(); this.setState((s)=>({ sheets:s.sheets.map((sh)=> sh.id===id?Object.assign({},sh,{ trades:sh.trades.filter((t,i)=>i!==row) }):sh), undo:snap }), ()=>this.persist()); }
 
   sideStyle(dir){
     var col = dir==='long' ? '#cfcfd4' : '#9a9aa1';
@@ -814,7 +824,7 @@ class Component extends DCLogic {
       shRows:shRowsView, shHasRows:d.rows.length>0, shEmpty:d.rows.length===0, sheetName:sheet.name, editSheetTitle:(e)=>this.editSheetTitle(e),
       monthly:monthly, pairs:pairs,
       addRow:()=>this.addRow(), updateCell:(e)=>this.updateCell(e), toggleRowDir:(e)=>this.toggleRowDir(e), toggleRowSession:(e)=>this.toggleRowSession(e), delRow:(e)=>this.delRow(e),
-      lbOpen:lbOpen, lbRow:lbRow, lbPhotos:lbPhotos, lbImages:lbImages, lbHasImages:lbImages.length>0, lbNoImages:lbImages.length===0, openLightbox:(e)=>this.openLightbox(e), closeLightbox:()=>this.closeLightbox(), closeLightboxBg:(e)=>this.closeLightboxBg(e), updatePhoto:(e)=>this.updatePhoto(e), dropPhoto:(e)=>this.dropPhoto(e), allowDrop:(e)=>this.allowDrop(e), openPhotoPicker:()=>this.openPhotoPicker(), pickPhotoFile:(e)=>this.pickPhotoFile(e), fileRef:(el)=>{ this.fileEl=el; }, zoomOpen: this.state.zoomImg!=null, zoomUrl: this.state.zoomImg||'', zoomPhoto:(e)=>this.zoomPhoto(e), closeZoom:()=>this.closeZoom(), stopLb:(e)=>e.stopPropagation()
+      lbOpen:lbOpen, lbRow:lbRow, lbPhotos:lbPhotos, lbImages:lbImages, lbHasImages:lbImages.length>0, lbNoImages:lbImages.length===0, openLightbox:(e)=>this.openLightbox(e), closeLightbox:()=>this.closeLightbox(), closeLightboxBg:(e)=>this.closeLightboxBg(e), updatePhoto:(e)=>this.updatePhoto(e), dropPhoto:(e)=>this.dropPhoto(e), allowDrop:(e)=>this.allowDrop(e), openPhotoPicker:()=>this.openPhotoPicker(), pickPhotoFile:(e)=>this.pickPhotoFile(e), fileRef:(el)=>{ this.fileEl=el; }, zoomOpen: this.state.zoomImg!=null, zoomUrl: this.state.zoomImg||'', zoomPhoto:(e)=>this.zoomPhoto(e), closeZoom:()=>this.closeZoom(), canUndo:this.state.undo!=null, undoAction:()=>this.undoAction(), dismissUndo:()=>this.dismissUndo(), stopLb:(e)=>e.stopPropagation()
     };
   }
 }
