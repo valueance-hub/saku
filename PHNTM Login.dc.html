@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+<script src="./phntm-supabase.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>PHNTM — Sign in</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e0e">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PHNTM">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@200;300;400;500;600;700&family=Michroma&family=Noto+Serif+KR:wght@300;500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f2ee;color:#15130f;font-family:'Archivo',sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
+a{color:#15130f;text-decoration:none}a:hover{color:#000}
+::selection{background:rgba(21,19,15,.14)}
+input{outline:none}
+/* the card sits on video, so the browser default placeholder grey drops under 2:1 */
+input::placeholder{color:#4a453e;opacity:1}
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{-webkit-text-fill-color:#15130f;-webkit-box-shadow:0 0 0 1000px #faf9f6 inset;caret-color:#15130f;transition:background-color 9999s ease-in-out 0s}
+/* Safari paints a filled-looking field on load even when it is empty — strip the
+   highlight so an untouched password reads as empty, which is what it is */
+input:-internal-autofill-selected{-webkit-box-shadow:0 0 0 1000px #faf9f6 inset !important;background-image:none !important;background-color:#faf9f6 !important;color:#15130f !important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spinRing{to{transform:rotate(360deg)}}
+@keyframes mdMark{0%{opacity:0;transform:translateY(62px)}42%{opacity:1}100%{opacity:1;transform:translateY(0)}}
+@keyframes twinkle0{0%,100%{opacity:1}50%{opacity:.42}}
+@keyframes twinkle1{0%,100%{opacity:.9}50%{opacity:.3}}
+@keyframes twinkle2{0%,100%{opacity:.75}50%{opacity:.22}}
+@keyframes twinkle3{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes breatheGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 34px rgba(255,255,255,.045)}}
+@keyframes asTrail{0%{opacity:0;transform:scaleY(0)}28%{opacity:.8}100%{opacity:0;transform:scaleY(1)}}
+@keyframes mdRule{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes dotPulse{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes riseUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes holoLogoIn{0%{opacity:0;text-shadow:5px 0 rgba(255,255,255,.6),-5px 0 rgba(255,255,255,.4)}55%{opacity:1}100%{opacity:1;text-shadow:0 0 rgba(255,255,255,0)}}
+@keyframes holoFlickerIn{0%{opacity:0}10%{opacity:1}15%{opacity:.4}20%{opacity:.85}26%{opacity:1}100%{opacity:1}}
+@keyframes scrollSoak{0%{clip-path:inset(0 0 100% 0);filter:blur(7px);opacity:.15}100%{clip-path:inset(0 0 0 0);filter:blur(0px);opacity:1}}
+@keyframes holoIn{from{opacity:0;transform:translateY(10px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@media (max-width:900px){
+  [data-m~="card"]{width:100% !important;max-width:400px;padding:34px 22px !important}
+  [data-m~="card"] input{font-size:16px !important}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-delay:0ms !important}
+  [style*="riseUp"],[style*="fadeUp"]{animation:fadeIn .2s ease both !important}
+}
+</style>
+</helmet>
+<div style="position:relative;display:flex;flex-direction:column;min-height:100vh;background:#f4f2ee;overflow:hidden">
+  <div aria-hidden="true" style="position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#f4f2ee">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="phSharpen" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 -0.42 0 -0.42 2.68 -0.42 0 -0.42 0"></feConvolveMatrix></filter></defs></svg>
+    <div ref="{{ vidWrap }}" style="position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease">
+      <video ref="{{ vidA }}" muted="{{ true }}" playsInline="{{ true }}" preload="none" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:62% 30%;opacity:0"></video>
+      <video ref="{{ vidB }}" muted="{{ true }}" playsInline="{{ true }}" preload="none" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:62% 30%;opacity:0"></video>
+    </div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 72% 60% at 50% 44%,rgba(248,247,244,.66),rgba(248,247,244,.24) 60%,rgba(244,242,238,.78))"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(244,242,238,.92),rgba(244,242,238,.06) 44%,rgba(240,238,233,.88))"></div>
+  </div>
+  <div aria-hidden="true" style="position:fixed;inset:0;z-index:0;pointer-events:none;filter:invert(1)"><dc-import name="InkLeaves" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import></div>
+  <sc-if value="{{ loaderPresent }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;inset:0;z-index:5;background:{{ introBg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;padding:60px 54px;opacity:{{ loaderOpacity }};transition:opacity .55s cubic-bezier(.16,1,.3,1)">
+      <sc-if value="{{ markVisible }}" hint-placeholder-val="{{ true }}">
+      <div style="position:relative;display:grid;place-items:center;overflow:hidden;padding:34px 0">
+        <span style="position:absolute;bottom:0;width:2px;height:54%;background:linear-gradient(180deg,rgba(21,19,15,.45),transparent);transform-origin:bottom;animation:asTrail 1.5s cubic-bezier(.32,.72,0,1) both"></span>
+        <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;animation:mdMark 1.5s cubic-bezier(.16,1,.3,1) both">
+          <span style="font-family:'Michroma',sans-serif;font-size:30px;letter-spacing:.02em;color:#15130f">phntm<span style="display:inline-block;color:#9c3a2f;animation:dotPulse 1.8s ease-in-out infinite">.</span></span>
+          <div style="width:150px;height:1px;background:linear-gradient(90deg,transparent,rgba(21,19,15,.5),transparent);transform-origin:center;animation:mdRule 1.7s .24s cubic-bezier(.16,1,.3,1) both"></div>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ loginMounted }}" hint-placeholder-val="{{ false }}">
+  <div style="display:contents">
+  <div style="position:relative;z-index:1;height:40px"></div>
+  <div style="position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:24px">
+    <div data-m="card" style="position:relative;width:396px;box-sizing:border-box;padding:46px 40px;display:flex;flex-direction:column;gap:28px;isolation:isolate;will-change:opacity,filter;animation:scrollSoak 1.15s cubic-bezier(.3,.75,.3,1) backwards">
+      <div aria-hidden="true" style="position:absolute;inset:0;z-index:-1;background:rgba(250,249,246,.22);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);border-top:1px solid rgba(21,19,15,.5);border-bottom:1px solid rgba(21,19,15,.5);box-shadow:inset 0 5px 0 rgba(21,19,15,.05),inset 0 -5px 0 rgba(21,19,15,.05)"></div>
+      <div style="text-align:center">
+        <span style="font-family:'Michroma',sans-serif;font-size:32px;letter-spacing:.01em;color:#15130f;display:inline-block">phntm<span style="display:inline-block;color:#9c3a2f;animation:dotPulse 1.8s ease-in-out infinite">.</span></span>
+        <div style="margin-top:9px;font-family:'Noto Serif KR',serif;font-size:11.5px;letter-spacing:.32em;color:#4a453e">天魔</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:24px">
+        <div>
+          <label style="font-size:12px;letter-spacing:.02em;color:#3f3a34">Email</label>
+          <input type="email" name="email" autocomplete="email" inputmode="email" spellcheck="false" placeholder="ghost@phntm.io" value="{{ email }}" onChange="{{ setEmail }}" onKeyDown="{{ onPassKey }}" style="width:100%;box-sizing:border-box;margin-top:8px;background:none;border:none;border-bottom:1px solid rgba(21,19,15,.18);color:#15130f;font-family:'Archivo',sans-serif;font-size:16px;padding:10px 0;transition:border-color .3s" style-focus="border-color:#15130f">
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <label style="font-size:12px;letter-spacing:.02em;color:#3f3a34">Password</label>
+            <a href="#" onClick="{{ openForgot }}" style="font-size:12px;color:#3f3a34;transition:color .3s" style-hover="color:#9c3a2f">Forgot?</a>
+          </div>
+          <div style="position:relative">
+            <input type="{{ passType }}" name="password" autocomplete="new-password" placeholder="Your password" value="{{ password }}" onChange="{{ setPassword }}" onKeyDown="{{ onPassKey }}" style="width:100%;box-sizing:border-box;margin-top:8px;background:none;border:none;border-bottom:1px solid rgba(21,19,15,.18);color:#15130f;font-family:'Archivo',sans-serif;font-size:16px;padding:10px 32px 10px 0;transition:border-color .3s" style-focus="border-color:#15130f">
+            <button type="button" onClick="{{ togglePass }}" aria-label="Show or hide password" style="position:absolute;right:0;bottom:9px;background:none;border:none;padding:2px;margin:0;cursor:pointer;color:#3f3a34;display:flex;align-items:center;transition:color .25s" style-hover="color:#15130f">
+              <sc-if value="{{ notShowPass }}" hint-placeholder-val="{{ true }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </sc-if>
+              <sc-if value="{{ showPass }}" hint-placeholder-val="{{ false }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+              </sc-if>
+            </button>
+          </div>
+        </div>
+      </div>
+      <button onClick="{{ submit }}" style="display:flex;align-items:center;justify-content:center;gap:10px;border:none;background:#15130f;color:#f7f6f3;font-family:'Archivo',sans-serif;font-size:14.5px;font-weight:500;padding:16px;border-radius:99px;cursor:pointer;animation:holoIn .5s .24s cubic-bezier(.16,1,.3,1) both;transition:opacity .3s,transform .16s ease-out,gap .3s" style-hover="opacity:.85;gap:18px" style-active="opacity:.7;transform:scale(.97)">
+        <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+          <span style="width:15px;height:15px;border-radius:50%;border:2px solid rgba(247,246,243,.25);border-top-color:#f7f6f3;animation:spinRing .7s linear infinite"></span>
+          <span>Signing in…</span>
+        </sc-if>
+        <sc-if value="{{ notLoading }}" hint-placeholder-val="{{ true }}">
+          <span>Login</span><span>→</span>
+        </sc-if>
+      </button>
+
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;margin-top:-12px">
+        <input type="checkbox" checked="{{ keepSignedIn }}" onChange="{{ toggleKeep }}" style="width:15px;height:15px;flex:none;accent-color:#15130f;cursor:pointer;margin:0">
+        <span style="font-size:12.5px;color:#3f3a34">Keep me signed in</span>
+      </label>
+      <sc-if value="{{ hasAuthErr }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;font-size:12.5px;color:#e0a05a;margin-top:-14px">{{ authErr }}</div></sc-if>
+      <div style="display:flex;align-items:center;gap:16px;animation:riseUp .42s .24s cubic-bezier(.16,1,.3,1) both">
+        <div style="flex:1;height:1px;background:rgba(21,19,15,.14)"></div>
+        <span style="font-size:12px;color:#3f3a34">or</span>
+        <div style="flex:1;height:1px;background:rgba(21,19,15,.14)"></div>
+      </div>
+      <div style="display:flex;gap:12px;animation:riseUp .42s .3s cubic-bezier(.16,1,.3,1) both">
+        <button type="button" onClick="{{ googleIn }}" style="flex:1;background:none;border:1px solid rgba(21,19,15,.18);border-radius:99px;padding:13px;color:#15130f;font-family:'Archivo',sans-serif;font-size:13.5px;cursor:pointer;transition:border-color .3s,background .3s,transform .16s ease-out" style-hover="border-color:rgba(21,19,15,.5);background:rgba(21,19,15,.04)" style-active="transform:scale(.97)">Google</button>
+        <button type="button" onClick="{{ appleIn }}" style="flex:1;background:none;border:1px solid rgba(21,19,15,.18);border-radius:99px;padding:13px;color:#15130f;font-family:'Archivo',sans-serif;font-size:13.5px;cursor:pointer;transition:border-color .3s,background .3s,transform .16s ease-out" style-hover="border-color:rgba(21,19,15,.5);background:rgba(21,19,15,.04)" style-active="transform:scale(.97)">Apple</button>
+      </div>
+      <div style="text-align:center;font-size:13px;color:#3f3a34;animation:riseUp .42s .36s cubic-bezier(.16,1,.3,1) both">No account yet? <a href="#" onClick="{{ openSignup }}" style="color:#15130f;background-image:linear-gradient(#9c3a2f,#9c3a2f);background-repeat:no-repeat;background-position:0 100%;background-size:0% 1px;padding-bottom:3px;transition:background-size .45s cubic-bezier(.16,1,.3,1)" style-hover="background-size:100% 1px">Sign up</a></div>
+    </div>
+  </div>
+  <div style="position:relative;z-index:1;height:36px"></div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ forgotOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeForgot }}" style="position:fixed;inset:0;z-index:20;background:rgba(236,233,227,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .25s ease both">
+      <div onClick="{{ stop }}" style="width:400px;max-width:100%;box-sizing:border-box;padding:38px 36px;background:#faf9f6;border:1px solid rgba(21,19,15,.14);border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.6);animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both">
+        <div style="font-family:'Michroma',sans-serif;font-size:16px;color:#15130f;margin-bottom:6px">Reset password</div>
+        <div style="font-size:13px;color:#3f3a34;line-height:1.55;margin-bottom:22px">Enter your account email. We will send a reset link.</div>
+        <sc-if value="{{ forgotSent }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:14px;color:#15130f;padding:10px 0 22px">✓ Link sent to <span style="color:#fff">{{ forgotEmail }}</span>. Check your inbox.</div>
+        </sc-if>
+        <sc-if value="{{ forgotNotSent }}" hint-placeholder-val="{{ true }}">
+          <input type="email" placeholder="you@email.com" value="{{ forgotEmail }}" onInput="{{ setForgotEmail }}" style="width:100%;box-sizing:border-box;background:none;border:none;border-bottom:1px solid rgba(21,19,15,.18);color:#fff;font-family:'Archivo',sans-serif;font-size:15px;padding:10px 0;margin-bottom:24px;transition:border-color .3s" style-focus="border-color:#fff">
+          <button onClick="{{ sendForgot }}" style="width:100%;border:none;background:#15130f;color:#f7f6f3;font-family:'Archivo',sans-serif;font-size:14px;font-weight:500;padding:14px;border-radius:99px;cursor:pointer;transition:opacity .3s,transform .16s ease-out" style-hover="opacity:.85" style-active="transform:scale(.98)">Send reset link</button>
+        </sc-if>
+        <button onClick="{{ closeForgot }}" style="width:100%;margin-top:10px;border:none;background:none;color:#c8c8c8;font-family:'Archivo',sans-serif;font-size:13px;padding:10px;cursor:pointer;transition:color .3s" style-hover="color:#fff">Close</button>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ signupOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSignup }}" style="position:fixed;inset:0;z-index:20;background:rgba(236,233,227,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .25s ease both">
+      <div onClick="{{ stop }}" style="width:400px;max-width:100%;box-sizing:border-box;padding:38px 36px;background:#faf9f6;border:1px solid rgba(21,19,15,.14);border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.6);animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both">
+        <div style="font-family:'Michroma',sans-serif;font-size:16px;color:#15130f;margin-bottom:6px">Create account</div>
+        <div style="font-size:13px;color:#3f3a34;line-height:1.55;margin-bottom:22px">One account. Every device.</div>
+        <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:18px">
+          <input placeholder="Name" value="{{ suName }}" onInput="{{ setSuName }}" style="width:100%;box-sizing:border-box;background:none;border:none;border-bottom:1px solid rgba(21,19,15,.18);color:#fff;font-family:'Archivo',sans-serif;font-size:15px;padding:10px 0;transition:border-color .3s" style-focus="border-color:#fff">
+          <input type="email" placeholder="Email" value="{{ suEmail }}" onInput="{{ setSuEmail }}" style="width:100%;box-sizing:border-box;background:none;border:none;border-bottom:1px solid rgba(21,19,15,.18);color:#fff;font-family:'Archivo',sans-serif;font-size:15px;padding:10px 0;transition:border-color .3s" style-focus="border-color:#fff">
+          <input type="password" name="new-password" autocomplete="new-password" placeholder="Password" value="{{ suPass }}" onInput="{{ setSuPass }}" style="width:100%;box-sizing:border-box;background:none;border:none;border-bottom:1px solid rgba(21,19,15,.18);color:#fff;font-family:'Archivo',sans-serif;font-size:15px;padding:10px 0;transition:border-color .3s" style-focus="border-color:#fff">
+        </div>
+        <sc-if value="{{ hasSuErr }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:12.5px;color:#e8ab6a;line-height:1.5;margin:0 0 18px">{{ suErr }}</div>
+        </sc-if>
+        <button onClick="{{ createAccount }}" style="width:100%;border:none;background:#15130f;color:#f7f6f3;font-family:'Archivo',sans-serif;font-size:14px;font-weight:500;padding:14px;border-radius:99px;cursor:pointer;opacity:{{ suReadyOpacity }};transition:opacity .3s,transform .16s ease-out" style-active="transform:scale(.98)">{{ suBtnLabel }}</button>
+        <button onClick="{{ closeSignup }}" style="width:100%;margin-top:10px;border:none;background:none;color:#c8c8c8;font-family:'Archivo',sans-serif;font-size:13px;padding:10px;cursor:pointer;transition:color .3s" style-hover="color:#fff">Close</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;noteBg&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#272727&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#1b1b1b&quot;,&quot;#1f1f1f&quot;,&quot;#1b1b1b&quot;,&quot;#1f1f1f&quot;,&quot;#272727&quot;],&quot;section&quot;:&quot;Note editor&quot;},&quot;bgVideo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Background&quot;},&quot;bgOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.85,&quot;min&quot;:0.1,&quot;max&quot;:1,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Background&quot;},&quot;bgInvert&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Background&quot;},&quot;bgSharpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Background&quot;}}">
+class Component extends DCLogic {
+  state = { name: '', email: '', password: '', loading: false, phase: 'load', forgotLabel: 'Forgot?', forgotOpen: false, forgotEmail: '', forgotSent: false, signupOpen: false, suName: '', suEmail: '', suPass: '' };
+  _authMsg(err) {
+    const m = (err && err.message) || 'Something went wrong.';
+    if (/invalid login credentials|invalid credentials|bad credential/i.test(m)) return 'Incorrect email or password.';
+    if (/invalid.*(email|password)/i.test(m)) return 'Incorrect email or password.';
+    if (/rate|too many/i.test(m)) return 'Too many attempts. Wait a moment.';
+    if (/email not confirmed/i.test(m)) return 'Confirm your email first. Check your inbox.';
+    if (/already registered|already exists/i.test(m)) return 'That email already has an account. Sign in instead.';
+    if (/password/i.test(m) && /6|short|least/i.test(m)) return 'Password must be at least 6 characters.';
+    if (/failed to fetch|networkerror|network request failed|offline|load failed/i.test(m)) return 'No connection to the server.';
+    return m;
+  }
+  _validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim()); }
+  async _oauth(provider) {
+    if (this.state.loading) return;
+    this.setState({ loading: true, authErr: '' });
+    try {
+      const A = window.PHNTM && window.PHNTM.auth;
+      if (!A || !A.signInWithProvider) throw new Error('Auth unavailable.');
+      await A.signInWithProvider(provider); // navigates away on success
+    } catch (err) {
+      const m = (err && err.message) || '';
+      const off = provider === 'google' ? 'Google sign-in isn\u2019t switched on yet \u2014 use your email for now.' : 'Apple sign-in isn\u2019t switched on yet \u2014 use your email for now.';
+      this.setState({ loading: false, authErr: /not enabled|unsupported|provider/i.test(m) ? off : this._authMsg(err) });
+    }
+  }
+  async _submit() {
+    if (this.state.loading) return;
+    const em = (this.state.email || '').trim().toLowerCase(), pw = (this.state.password || '').trim();
+    if (!em || !pw) { this.setState({ authErr: 'Email and password are required.' }); return; }
+    if (!this._validEmail(em)) { this.setState({ authErr: 'Enter a valid email address.' }); return; }
+    this.setState({ authErr: '', loading: true });
+    try {
+      const A = window.PHNTM && window.PHNTM.auth; if (!A) throw new Error('Auth unavailable.');
+      let data;
+      try { data = await A.signIn(em, pw); }
+      catch (e1) {
+        const m1 = (e1 && e1.message) || '';
+        // wrong password / unconfirmed email are final — never retry those
+        if (/invalid login credentials|email not confirmed|password/i.test(m1)) throw e1;
+        await new Promise((r) => setTimeout(r, 700));
+        data = await A.signIn(em, pw);
+      }
+      const nm = (data && data.user && data.user.user_metadata && data.user.user_metadata.name) || '';
+      try { localStorage.setItem('phntm_email', em); if (nm) localStorage.setItem('phntm-name', nm); } catch (e) {}
+      window.location.href = 'PHNTM Dashboard.dc.html';
+    } catch (err) {
+      this.setState({ loading: false, authErr: this._authMsg(err) });
+    }
+  }
+  componentDidMount() {
+    try { if (localStorage.getItem('phntm-keep') === '0') this.setState({ keepSignedIn: false }); } catch (e) {}
+    try { const sn = localStorage.getItem('phntm-name'); if (sn) this.setState({ name: sn }); } catch (e) {}
+    try { const saved = localStorage.getItem('phntm_email'); if (saved) this.setState({ email: saved }); } catch (e) {}
+    // Already signed in? Don't make them log in again — Supabase persists the session.
+    (async () => {
+      try {
+        const A = window.PHNTM && window.PHNTM.auth; if (!A) return;
+        // If the dashboard just sent us here, it already decided there's no session —
+        // don't bounce straight back and start a loop.
+        let bounced = false; try { bounced = sessionStorage.getItem('phntm-bounce') === '1'; } catch (e) {}
+        if (bounced) { try { sessionStorage.removeItem('phntm-bounce'); } catch (e) {} return; }
+        const s = A.sessionReady ? await A.sessionReady(1200) : await A.currentUser();
+        if (s) {
+          // keep the loader up and skip the reveal entirely — no form flash
+          this.setState({ resuming: true, phase: 'load' });
+          // the mark is already on screen — let the dashboard pick it up instead of
+          // playing the same intro a second time
+          try { sessionStorage.setItem('phntm-handoff', '1'); } catch (e) {}
+          setTimeout(() => window.location.replace('PHNTM Dashboard.dc.html'), 240);
+        }
+      } catch (e) {}
+    })();
+    // One duration, always. Shortening it on repeat visits made the intro look random —
+    // whether you saw the count depended on whether the page had loaded before in this
+    // session, which is invisible to the person watching.
+    // No counter: a percentage implies work being measured, and nothing here is.
+    // The mark simply holds, then hands over.
+    const dur = 1150;
+    this._t1 = setTimeout(() => this.setState({ phase: 'reveal' }), dur);
+    this._t2 = setTimeout(() => this.setState({ phase: 'done' }), dur + 620);
+    // safety net: if the reveal timers are ever starved, land on the form anyway
+    this._t3 = setTimeout(() => {
+      if (this.state.phase !== 'done' && !this.state.resuming) this.setState({ phase: 'done' });
+    }, dur + 1400);
+  }
+  // The clip cannot loop whole: end-to-start scores 27.1 against a 10.7 average frame
+  // step. Comparing every pair of sampled frames, the closest match at least 3s apart is
+  // 0.30s -> 4.80s at 12.7 — about one frame step by that measure, but an independent
+  // pass rated the same cut higher, so this does not rely on the cut alone being clean.
+  // One decoder loops the range and a second dissolves the wrap over 0.35s. That is far
+  // too short to read as the ghosting a long crossfade caused, and the two frames it
+  // blends are near-identical by construction, so nothing doubles.
+  _startBg() {
+    const a = this._va, b = this._vb;
+    if (!a || !b || this._bgRunning) return;
+    if (this.props.bgVideo === false) return;
+
+    // The clip is 4K and ~17MB. Metered or low-power devices get the plain backdrop
+    // rather than a stalled login.
+    const conn = navigator.connection || {};
+    const cheap = conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || '')
+                  || (navigator.hardwareConcurrency || 8) <= 2;
+    if (cheap) return;
+
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const IN = 0.30, OUT = 4.80, FADE = 0.35;
+    const PEAK = Number(this.props.bgOpacity ?? 0.85);
+    const SPAN = (OUT - IN) * 1000;
+    // Sharpen runs FIRST, on the untouched frame, before the invert flips it.
+    const sharpen = this.props.bgSharpen === false ? '' : 'url(#phSharpen) ';
+    const grade = (k) => (this.props.bgInvert === true)
+      ? sharpen + 'invert(1) contrast(1.08) brightness(' + (0.92 * k).toFixed(4) + ')'
+      : sharpen + 'grayscale(1) contrast(1.06) brightness(' + (1.03 * k).toFixed(4) + ')';
+
+    [a, b].forEach((v) => {
+      v.muted = true; v.loop = false; v.playsInline = true;
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+      if (!v.src) { v.src = './assets/chunma.mp4'; v.load(); }
+      // Brightness climbs through the clip (mean 157 -> 169), so the wrap would jump
+      // light. Scrubbed from each element's own clock, normalised to the level at IN.
+      v._lvl = v.animate(
+        [{ filter: grade(1) }, { filter: grade(0.9591) }],
+        { duration: SPAN, easing: 'linear', fill: 'both' }
+      );
+      v._lvl.pause();
+    });
+
+    // Density is carried once by the WRAPPER, so the pair can stay opaque and the
+    // dissolve never dips or doubles the composite.
+    // The wrapper carries opacity ONLY — no filter, so it does not become a second
+    // rasterised surface between the decoder and the screen.
+    const wrap = this._vw;
+    if (wrap) { wrap.style.opacity = PEAK; wrap.style.filter = 'none'; }
+
+    const play = (v) => {
+      const p = v.play();
+      // autoplay can be refused before any gesture; retry once the tab is interacted with
+      if (p && p.catch) p.catch(() => {
+        const go = () => { v.play().catch(() => {}); document.removeEventListener('pointerdown', go); };
+        document.addEventListener('pointerdown', go, { once: true });
+      });
+    };
+    const at = (v, t) => { try { v.currentTime = t; } catch (e) {} };
+    const ready = (v, fn) => { if (v.readyState >= 1) fn(); else v.addEventListener('loadedmetadata', fn, { once: true }); };
+
+    let front = a, back = b, armed = false;
+    const stack = () => { front.style.zIndex = 2; back.style.zIndex = 1; };
+    front.style.opacity = 1; back.style.opacity = 0; stack();
+    ready(a, () => at(a, IN));
+
+    if (reduce) { this._bgRunning = true; return; }
+    play(a);
+
+    const tick = () => {
+      if (!this._bgRunning) return;
+      const t = front.currentTime || 0;
+      if (front._lvl) front._lvl.currentTime = Math.min(SPAN, Math.max(0, (t - IN) * 1000));
+      if (armed && back._lvl) back._lvl.currentTime = Math.min(SPAN, Math.max(0, ((back.currentTime || 0) - IN) * 1000));
+
+      const left = OUT - t;
+      if (!armed && left <= FADE) {
+        armed = true;
+        ready(back, () => at(back, IN));
+        at(back, IN); back.style.opacity = 1; stack(); play(back);
+      }
+      if (armed) {
+        const k = Math.min(1, Math.max(0, (FADE - left) / FADE));
+        front.style.opacity = 1 - k;          // the outgoing layer is always the top one
+        if (left <= 0.03 || front.ended) {
+          front.pause(); front.style.opacity = 0; at(front, IN);
+          const tmp = front; front = back; back = tmp; armed = false;
+          front.style.opacity = 1; stack();
+        }
+      } else if (t < IN - 0.05) {
+        at(front, IN);
+      }
+    };
+    // Driven by a timer rather than rAF: rAF is suspended whenever the page is not the
+    // active frame, which stalled the loop and left the last frame frozen.
+    this._bgRunning = true;
+    this._raf = setInterval(tick, 40);
+    tick();
+
+    // iOS suspends decoders on tab blur; nudge both back when the page returns
+    this._onVis = () => { if (!document.hidden) { play(front); if (armed) play(back); } };
+    document.addEventListener('visibilitychange', this._onVis);
+
+    // The figure sits mid-frame, which on a wide screen is exactly where the sign-in
+    // card is. Slide the crop across so he clears the card instead of hiding behind it;
+    // on a portrait phone the card fills the width anyway, so centre stays correct.
+    this._fit = () => {
+      // The clip frames him nearly full-height, so cropping alone cannot make him look
+      // distant. The frame is inset instead and anchored low, which reads as a figure
+      // standing far off on the ridge rather than a portrait pressed against the glass.
+      const wide = window.innerWidth >= 900;
+      [a, b].forEach((v) => {
+        v.style.objectFit = 'cover';
+        v.style.objectPosition = '0% 96%';
+        v.style.transformOrigin = '0% 96%';
+        v.style.transform = 'scale(' + (wide ? 2.5 : 2.2) + ')';
+        v.style.webkitMaskImage = 'none'; v.style.maskImage = 'none';
+      });
+    };
+    this._fit();
+    window.addEventListener('resize', this._fit);
+  }
+  componentWillUnmount() {
+    [this._t1, this._t2, this._t3].forEach((t) => clearTimeout(t));
+    this._bgRunning = false;
+    [this._va, this._vb].forEach((v) => { if (v && v._lvl) v._lvl.cancel(); });
+    if (this._raf) clearInterval(this._raf);
+    if (this._onVis) document.removeEventListener('visibilitychange', this._onVis);
+    if (this._fit) window.removeEventListener('resize', this._fit);
+  }
+  _bgRef(which) {
+    return (el) => {
+      if (!el) return;
+      this[which] = el;
+      if (this._va && this._vb && this._vw) this._startBg();
+    };
+  }
+  renderVals() {
+    const keep = this.state.keepSignedIn !== false;
+    // the intro colour is chosen in Settings; a raw-string key can come back JSON-quoted
+    const _intro = (() => {
+      let raw = null;
+      try { raw = localStorage.getItem('phntm-intro-bg-v1'); } catch (e) {}
+      if (!raw) return null;
+      let v = String(raw).trim();
+      if (v[0] === '"') { try { v = JSON.parse(v); } catch (e) { v = v.replace(/^"+|"+$/g, ''); } }
+      return /^#[0-9a-f]{6}$/i.test(v) ? v : null;
+    })();
+    return {
+      vidWrap: this._refW || (this._refW = this._bgRef('_vw')),
+      vidA: this._refA || (this._refA = this._bgRef('_va')),
+      vidB: this._refB || (this._refB = this._bgRef('_vb')),
+      keepSignedIn: keep,
+      toggleKeep: (e) => { const on = e.target.checked; this.setState({ keepSignedIn: on }); try { localStorage.setItem('phntm-keep', on ? '1' : '0'); } catch (_) {} },
+      introBg: _intro || '#f4f2ee',
+      email: this.state.email,
+      setEmail: (e) => this.setState({ email: e.target.value, authErr: '' }),
+      name: this.state.name,
+      setName: (e) => this.setState({ name: e.target.value }),
+      password: this.state.password,
+      setPassword: (e) => this.setState({ password: e.target.value, authErr: '' }),
+      passType: this.state.showPass ? 'text' : 'password',
+      showPass: !!this.state.showPass,
+      notShowPass: !this.state.showPass,
+      togglePass: (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ showPass: !this.state.showPass }); },
+      forgotLabel: this.state.forgotLabel,
+      stop: (e) => e.stopPropagation(),
+      forgotOpen: !!this.state.forgotOpen,
+      forgotEmail: this.state.forgotEmail,
+      setForgotEmail: (e) => this.setState({ forgotEmail: e.target.value }),
+      forgotSent: !!this.state.forgotSent,
+      forgotNotSent: !this.state.forgotSent,
+      openForgot: (e) => { e.preventDefault(); this.setState({ forgotOpen: true, forgotSent: false, forgotEmail: (this.state.email || '').trim() }); },
+      closeForgot: () => this.setState({ forgotOpen: false }),
+      sendForgot: async () => {
+        const em = (this.state.forgotEmail || '').trim(); if (!em) return;
+        try { const A = window.PHNTM && window.PHNTM.auth; if (A) await A.resetPassword(em); } catch (e) {}
+        this.setState({ forgotSent: true });
+      },
+      signupOpen: !!this.state.signupOpen,
+      suName: this.state.suName, setSuName: (e) => this.setState({ suName: e.target.value, suErr: '' }),
+      suEmail: this.state.suEmail, setSuEmail: (e) => this.setState({ suEmail: e.target.value, suErr: '' }),
+      suPass: this.state.suPass, setSuPass: (e) => this.setState({ suPass: e.target.value, suErr: '' }),
+      suErr: this.state.suErr || '',
+      hasSuErr: !!this.state.suErr,
+      suBtnLabel: this.state.loading ? 'Creating…' : 'Create account →',
+      suReadyOpacity: ((this.state.suName || '').trim() && (this.state.suEmail || '').trim() && (this.state.suPass || '').trim()) ? 1 : 0.5,
+      openSignup: (e) => { e.preventDefault(); this.setState({ signupOpen: true, suErr: '', authErr: '' }); },
+      closeSignup: () => this.setState({ signupOpen: false, loading: false }),
+      createAccount: async () => {
+        const nm = (this.state.suName || '').trim(), em = (this.state.suEmail || '').trim().toLowerCase(), pw = (this.state.suPass || '').trim();
+        if (!nm || !em || !pw) { this.setState({ suErr: 'Name, email and password are required.' }); return; }
+        if (!this._validEmail(em)) { this.setState({ suErr: 'Enter a valid email address.' }); return; }
+        if (pw.length < 6) { this.setState({ suErr: 'Password must be at least 6 characters.' }); return; }
+        if (this.state.loading) return;
+        this.setState({ loading: true, suErr: '' });
+        try {
+          const A = window.PHNTM && window.PHNTM.auth; if (!A) throw new Error('Auth unavailable.');
+          const data = await A.signUp(em, pw, nm);
+          try { localStorage.setItem('phntm-name', nm); localStorage.setItem('phntm_email', em); } catch (e) {}
+          if (data && data.session) {
+            try { sessionStorage.setItem('phntm-welcome', '1'); sessionStorage.setItem('phntm-fresh', '1'); } catch (e) {}
+            this.setState({ signupOpen: false });
+            window.location.href = 'PHNTM Dashboard.dc.html';
+          } else {
+            this.setState({ loading: false, suErr: 'Account created. Confirm your email, then sign in.' });
+          }
+        } catch (err) {
+          this.setState({ loading: false, suErr: this._authMsg(err) });
+        }
+      },
+
+      loading: this.state.loading,
+      notLoading: !this.state.loading,
+      loaderPresent: this.state.phase !== 'done',
+      markVisible: !this.state.resuming,
+      loginMounted: !this.state.resuming && this.state.phase !== 'load',
+      loaderOpacity: (this.state.resuming || this.state.phase === 'load') ? 1 : 0,
+
+
+      submit: () => this._submit(),
+      googleIn: this._g || (this._g = (e) => { if (e && e.preventDefault) e.preventDefault(); this._oauth('google'); }),
+      appleIn: this._a || (this._a = (e) => { if (e && e.preventDefault) e.preventDefault(); this._oauth('apple'); }),
+      onPassKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this._submit(); } },
+      authErr: this.state.authErr || '',
+      hasAuthErr: !!this.state.authErr,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@keyframes lfA{0%{transform:translate3d(0,-12vh,0) rotate(0deg)}100%{transform:translate3d(6vw,112vh,0) rotate(220deg)}}
+@keyframes lfB{0%{transform:translate3d(0,-12vh,0) rotate(0deg)}100%{transform:translate3d(-7vw,112vh,0) rotate(-260deg)}}
+@keyframes lfSway{0%,100%{margin-left:0}50%{margin-left:34px}}
+</style>
+</helmet>
+<div aria-hidden="true" style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
+  <span style="position:absolute;top:0;left:6%;width:11px;height:7px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.16;animation:lfA 19s -2s linear infinite,lfSway 6.5s ease-in-out infinite"></span>
+  <span style="position:absolute;top:0;left:17%;width:8px;height:5px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.11;animation:lfB 26s -9s linear infinite,lfSway 8s ease-in-out infinite"></span>
+  <span style="position:absolute;top:0;left:29%;width:13px;height:8px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.2;animation:lfA 15s -13s linear infinite,lfSway 5.2s ease-in-out infinite"></span>
+  <span style="position:absolute;top:0;left:41%;width:7px;height:4px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.1;animation:lfB 30s -4s linear infinite,lfSway 9s ease-in-out infinite"></span>
+  <span style="position:absolute;top:0;left:54%;width:10px;height:6px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.15;animation:lfA 22s -17s linear infinite,lfSway 7s ease-in-out infinite"></span>
+  <span style="position:absolute;top:0;left:66%;width:14px;height:9px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.22;animation:lfB 17s -6s linear infinite,lfSway 6s ease-in-out infinite"></span>
+  <span style="position:absolute;top:0;left:78%;width:9px;height:5px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.13;animation:lfA 28s -21s linear infinite,lfSway 8.6s ease-in-out infinite"></span>
+  <span style="position:absolute;top:0;left:88%;width:11px;height:7px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.17;animation:lfB 21s -11s linear infinite,lfSway 5.8s ease-in-out infinite"></span>
+  <span style="position:absolute;top:0;left:95%;width:8px;height:5px;border-radius:60% 8% 60% 8%;background:#cfc6b4;opacity:.12;animation:lfA 24s -15s linear infinite,lfSway 7.4s ease-in-out infinite"></span>
+</div>
+</x-dc>
+</body>
+</html>

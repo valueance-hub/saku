@@ -1,0 +1,16 @@
+{
+  "name": "PHNTM — Trading Journal",
+  "short_name": "PHNTM",
+  "description": "Trading journal, prop-firm challenge tracker, and daily health log.",
+  "start_url": "./PHNTM%20Dashboard.dc.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e0e0e",
+  "theme_color": "#0e0e0e",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
